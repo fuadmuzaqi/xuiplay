@@ -13,7 +13,8 @@ const state = {
 
 const ICONS = {
   play: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>`,
-  pause: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>`
+  pause: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>`,
+  playing_gif: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h1m8-9v1m8 8h1m-9 8v1M5.6 5.6l.7.7m11.4 11.4l.7.7M5.6 18.4l.7-.7m11.4-11.4l.7-.7"/></svg>`
 };
 
 const refs = {
@@ -24,28 +25,25 @@ const refs = {
   currentTime: document.getElementById("currentTime"),
   durationTime: document.getElementById("durationTime"),
   themeToggle: document.getElementById("themeToggle"),
+  installBtn: document.getElementById("installBtn"),
   refreshBtn: document.getElementById("refreshBtn"),
-  clearCacheBtn: document.getElementById("clearCacheBtn"),
-  installBtn: document.getElementById("installBtn")
+  clearCacheBtn: document.getElementById("clearCacheBtn")
 };
 
 document.addEventListener("DOMContentLoaded", () => {
   applyTheme(state.theme);
   bindEvents();
   loadLibrary();
-  registerServiceWorker();
+  registerSW();
 });
 
 function bindEvents() {
   refs.playPauseBtn.addEventListener("click", onPlayPause);
-  document.getElementById("prevBtn").addEventListener("click", playPrevious);
+  document.getElementById("prevBtn").addEventListener("click", playPrev);
   document.getElementById("nextBtn").addEventListener("click", playNext);
-
-  // Refresh & Clear Cache
   refs.refreshBtn.addEventListener("click", () => location.reload());
-  refs.clearCacheBtn.addEventListener("click", clearAppCache);
+  refs.clearCacheBtn.addEventListener("click", clearCache);
 
-  // Seek Logic
   refs.timeBar.addEventListener("change", (e) => {
     if (state.player && state.playerReady) state.player.seekTo(e.target.value, true);
   });
@@ -53,14 +51,12 @@ function bindEvents() {
     refs.currentTime.textContent = formatTime(e.target.value);
   });
 
-  // Theme
   refs.themeToggle.addEventListener("click", () => {
     state.theme = state.theme === "dark" ? "light" : "dark";
     applyTheme(state.theme);
     localStorage.setItem('theme', state.theme);
   });
 
-  // PWA Install
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     state.deferredPrompt = e;
@@ -70,53 +66,24 @@ function bindEvents() {
   refs.installBtn.addEventListener('click', async () => {
     if (state.deferredPrompt) {
       state.deferredPrompt.prompt();
-      const { outcome } = await state.deferredPrompt.userChoice;
-      if (outcome === 'accepted') refs.installBtn.style.display = 'none';
       state.deferredPrompt = null;
+      refs.installBtn.style.display = 'none';
     }
   });
 }
 
-async function clearAppCache() {
-  if (confirm("Hapus cache dan reset aplikasi?")) {
+function clearCache() {
+  if (confirm("Hapus cache dan reset?")) {
     localStorage.clear();
-    const cacheNames = await caches.keys();
-    await Promise.all(cacheNames.map(name => caches.delete(name)));
+    caches.keys().then(names => names.forEach(n => caches.delete(n)));
     location.reload();
   }
 }
 
-function registerServiceWorker() {
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js').catch(err => console.log(err));
-  }
-}
-
-// Player Logic (Sesuai kode asli Anda namun dengan icon SVG)
-function startProgressTimer() {
-  if (state.progressInterval) clearInterval(state.progressInterval);
-  state.progressInterval = setInterval(() => {
-    if (state.player && state.isPlaying) {
-      const current = state.player.getCurrentTime();
-      const duration = state.player.getDuration();
-      refs.timeBar.max = duration;
-      refs.timeBar.value = current;
-      refs.currentTime.textContent = formatTime(current);
-      refs.durationTime.textContent = formatTime(duration);
-    }
-  }, 500);
-}
-
-function formatTime(s) {
-  const m = Math.floor(s / 60);
-  const sc = Math.floor(s % 60);
-  return `${m}:${sc < 10 ? '0' : ''}${sc}`;
-}
-
 async function loadLibrary() {
   try {
-    const response = await fetch("/api/library");
-    const data = await response.json();
+    const res = await fetch("/api/library");
+    const data = await res.json();
     state.library = data.genres || [];
     if (state.library.length) {
       state.activeGenreId = state.library[0].id;
@@ -140,21 +107,25 @@ window.switchGenre = (id) => {
 };
 
 function renderPlaylist() {
-  const activeGenre = state.library.find(g => g.id === state.activeGenreId);
-  const tracks = activeGenre?.tracks || [];
-  document.getElementById("genreHeading").textContent = activeGenre?.name || "Genre";
+  const genre = state.library.find(g => g.id === state.activeGenreId);
+  const tracks = genre?.tracks || [];
   document.getElementById("trackCount").textContent = `${tracks.length} track`;
 
-  refs.playlistContainer.innerHTML = tracks.map((t, i) => `
-    <button class="track-row ${state.activeTrack?.id === t.id ? "active" : ""}" 
-            onclick="selectTrack(${i})">
-      <span class="track-info">
-        <span class="track-title">${t.title}</span>
-        <span class="track-artist">${t.artist || "Unknown"}</span>
-      </span>
-      <span style="width:18px">${state.activeTrack?.id === t.id && state.isPlaying ? ICONS.pause : ICONS.play}</span>
-    </button>
-  `).join("");
+  refs.playlistContainer.innerHTML = tracks.map((t, i) => {
+    const isActive = state.activeTrack?.id === t.id;
+    return `
+      <button class="track-row ${isActive ? 'active' : ''}" onclick="selectTrack(${i})">
+        <span class="track-index">${i + 1}</span>
+        <div class="track-info">
+          <span class="track-title">${t.title}</span>
+          <span class="track-artist">${t.artist || "Unknown"}</span>
+        </div>
+        <div class="track-icon-wrap">
+          ${isActive && state.isPlaying ? ICONS.playing_gif : ICONS.play}
+        </div>
+      </button>
+    `;
+  }).join("");
 }
 
 window.selectTrack = async (index) => {
@@ -166,9 +137,9 @@ window.selectTrack = async (index) => {
   document.getElementById("nowArtist").textContent = track.artist;
 
   if (!state.player) {
-    const script = document.createElement("script");
-    script.src = "https://www.youtube.com/iframe_api";
-    document.head.appendChild(script);
+    const tag = document.createElement('script');
+    tag.src = "https://www.youtube.com/iframe_api";
+    document.head.appendChild(tag);
     window.onYouTubeIframeAPIReady = () => createPlayer(track.youtubeVideoId);
   } else {
     state.player.loadVideoById(track.youtubeVideoId);
@@ -185,7 +156,7 @@ function createPlayer(videoId) {
       onStateChange: (e) => {
         state.isPlaying = (e.data === YT.PlayerState.PLAYING);
         refs.playPauseBtn.innerHTML = state.isPlaying ? ICONS.pause : ICONS.play;
-        if (state.isPlaying) startProgressTimer();
+        if (state.isPlaying) startTimer();
         if (e.data === YT.PlayerState.ENDED) playNext();
         renderPlaylist();
       }
@@ -193,15 +164,35 @@ function createPlayer(videoId) {
   });
 }
 
-function onPlayPause() {
-  if (!state.player) return;
-  state.isPlaying ? state.player.pauseVideo() : state.player.playVideo();
+function startTimer() {
+  if (state.progressInterval) clearInterval(state.progressInterval);
+  state.progressInterval = setInterval(() => {
+    if (state.player && state.isPlaying) {
+      const cur = state.player.getCurrentTime();
+      const dur = state.player.getDuration();
+      refs.timeBar.max = dur;
+      refs.timeBar.value = cur;
+      refs.currentTime.textContent = formatTime(cur);
+      refs.durationTime.textContent = formatTime(dur);
+    }
+  }, 500);
 }
 
+function formatTime(s) {
+  const m = Math.floor(s / 60);
+  const sc = Math.floor(s % 60);
+  return `${m}:${sc < 10 ? '0' : ''}${sc}`;
+}
+
+function onPlayPause() { if(state.player) state.isPlaying ? state.player.pauseVideo() : state.player.playVideo(); }
 function playNext() { /* Logika Next */ }
-function playPrevious() { /* Logika Prev */ }
+function playPrev() { /* Logika Prev */ }
 
 function applyTheme(t) {
   document.documentElement.setAttribute("data-theme", t);
-  refs.themeToggle.textContent = t === "dark" ? "☀" : "☾";
+  refs.themeToggle.innerHTML = t === "dark" ? "☀" : "☾";
+}
+
+function registerSW() {
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(() => {});
 }
