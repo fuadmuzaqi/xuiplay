@@ -8,8 +8,10 @@ const state = {
   isPlaying: false,
   youtubeApiPromise: null,
   pendingAutoplay: false,
+  progressTimer: null,
   eqValues: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-  theme: window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
+  theme: window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light",
+  isSeeking: false
 };
 
 const refs = {
@@ -25,8 +27,10 @@ const refs = {
   eqPanel: document.getElementById("eqPanel"),
   eqToggleBtn: document.getElementById("eqToggleBtn"),
   eqSliders: document.getElementById("eqSliders"),
-  eqVisualizer: document.getElementById("eqVisualizer"),
-  themeToggle: document.getElementById("themeToggle")
+  themeToggle: document.getElementById("themeToggle"),
+  progressBar: document.getElementById("progressBar"),
+  currentTime: document.getElementById("currentTime"),
+  durationTime: document.getElementById("durationTime")
 };
 
 const EQ_FREQUENCIES = ["32", "64", "125", "250", "500", "1k", "2k", "4k", "8k", "16k"];
@@ -40,6 +44,7 @@ document.addEventListener("DOMContentLoaded", () => {
   applyTheme(state.theme);
   bindEvents();
   renderEqSliders();
+  resetProgressUi();
   loadLibrary();
 });
 
@@ -61,6 +66,25 @@ function bindEvents() {
 
   document.querySelectorAll(".preset-btn").forEach((button) => {
     button.addEventListener("click", () => applyEqPreset(button.dataset.preset));
+  });
+
+  refs.progressBar.addEventListener("input", () => {
+    state.isSeeking = true;
+    const duration = getPlayerDuration();
+    const nextTime = (Number(refs.progressBar.value) / 100) * duration;
+    refs.currentTime.textContent = formatTime(nextTime);
+    paintProgressBar(Number(refs.progressBar.value));
+  });
+
+  refs.progressBar.addEventListener("change", () => {
+    const duration = getPlayerDuration();
+    const nextTime = (Number(refs.progressBar.value) / 100) * duration;
+
+    if (state.playerReady && state.player && duration > 0) {
+      state.player.seekTo(nextTime, true);
+    }
+
+    state.isSeeking = false;
   });
 }
 
@@ -150,6 +174,7 @@ async function selectTrack(index, autoplay = true) {
   state.activeTrack = track;
   state.activeTrackIndex = index;
   updateNowPlaying(track);
+  resetProgressUi();
 
   await ensureYouTubeApi();
 
@@ -237,6 +262,7 @@ function createPlayer(videoId) {
     events: {
       onReady: (event) => {
         state.playerReady = true;
+        updateProgressUi();
         if (state.pendingAutoplay) {
           state.pendingAutoplay = false;
           event.target.playVideo();
@@ -246,7 +272,13 @@ function createPlayer(videoId) {
         const playing = event.data === window.YT.PlayerState.PLAYING;
         state.isPlaying = playing;
         refs.playPauseBtn.textContent = playing ? "⏸" : "▶";
-        refs.eqVisualizer.classList.toggle("playing", playing);
+
+        if (playing) {
+          startProgressLoop();
+        } else {
+          stopProgressLoop();
+          updateProgressUi();
+        }
 
         if (event.data === window.YT.PlayerState.ENDED) {
           playNext();
@@ -256,6 +288,53 @@ function createPlayer(videoId) {
       }
     }
   });
+}
+
+function startProgressLoop() {
+  stopProgressLoop();
+  state.progressTimer = window.setInterval(updateProgressUi, 500);
+}
+
+function stopProgressLoop() {
+  if (state.progressTimer) {
+    window.clearInterval(state.progressTimer);
+    state.progressTimer = null;
+  }
+}
+
+function updateProgressUi() {
+  if (!state.playerReady || !state.player || state.isSeeking) return;
+
+  const duration = getPlayerDuration();
+  const current = Number(state.player.getCurrentTime?.() || 0);
+
+  refs.currentTime.textContent = formatTime(current);
+  refs.durationTime.textContent = formatTime(duration);
+
+  if (duration > 0) {
+    const percent = Math.min(100, (current / duration) * 100);
+    refs.progressBar.value = String(percent);
+    paintProgressBar(percent);
+  } else {
+    refs.progressBar.value = "0";
+    paintProgressBar(0);
+  }
+}
+
+function resetProgressUi() {
+  refs.progressBar.value = "0";
+  refs.currentTime.textContent = "0:00";
+  refs.durationTime.textContent = "0:00";
+  paintProgressBar(0);
+}
+
+function getPlayerDuration() {
+  if (!state.playerReady || !state.player) return 0;
+  return Number(state.player.getDuration?.() || 0);
+}
+
+function paintProgressBar(percent) {
+  refs.progressBar.style.setProperty("--progress", `${percent}%`);
 }
 
 function renderEqSliders() {
@@ -278,11 +357,8 @@ function renderEqSliders() {
     input.addEventListener("input", () => {
       const index = Number(input.dataset.bandIndex);
       state.eqValues[index] = Number(input.value);
-      updateEqVisualBoost();
     });
   });
-
-  updateEqVisualBoost();
 }
 
 function applyEqPreset(name) {
@@ -298,19 +374,18 @@ function applyEqPreset(name) {
   document.querySelectorAll(".preset-btn").forEach((button) => {
     button.classList.toggle("active", button.dataset.preset === name);
   });
-
-  updateEqVisualBoost();
-}
-
-function updateEqVisualBoost() {
-  const average = state.eqValues.reduce((sum, value) => sum + Math.abs(value), 0) / state.eqValues.length;
-  const boost = `${Math.min(52, 18 + average * 5)}%`;
-  refs.eqVisualizer.style.setProperty("--eq-boost", boost);
 }
 
 function applyTheme(theme) {
   document.documentElement.setAttribute("data-theme", theme);
   refs.themeToggle.textContent = theme === "dark" ? "☀" : "☾";
+}
+
+function formatTime(seconds) {
+  const safe = Math.max(0, Math.floor(seconds || 0));
+  const mins = Math.floor(safe / 60);
+  const secs = safe % 60;
+  return `${mins}:${String(secs).padStart(2, "0")}`;
 }
 
 function escapeHtml(value = "") {
