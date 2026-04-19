@@ -3,13 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Studio — SQL Generator</title>
+  <title>SQL Studio — Batch Engine</title>
   
   <link href="https://api.fontshare.com/v2/css?f[]=satoshi@300,400,500,700,900&f[]=boska@300,400,500,700&display=swap" rel="stylesheet">
 
   <style>
     :root {
-      /* Dark Mode (Default) Variables */
       --bg: #050505;
       --surface: rgba(255, 255, 255, 0.03);
       --border: rgba(255, 255, 255, 0.1);
@@ -17,7 +16,6 @@
       --text-muted: #a1a1aa;
       --accent: #00f2ff;
       --input-bg: rgba(255, 255, 255, 0.02);
-      
       --font-display: "Boska", serif;
       --font-body: "Satoshi", sans-serif;
       --font-mono: "JetBrains Mono", monospace;
@@ -35,228 +33,120 @@
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    
-    body {
-      background-color: var(--bg);
-      color: var(--text);
-      font-family: var(--font-body);
-      min-height: 100vh;
-      -webkit-font-smoothing: antialiased;
-      transition: background-color 0.4s ease;
-    }
+    body { background-color: var(--bg); color: var(--text); font-family: var(--font-body); min-height: 100vh; -webkit-font-smoothing: antialiased; }
 
     .container { max-width: 1200px; margin: 0 auto; padding: 0 2rem; }
 
-    header {
-      padding: 3rem 0;
+    header { padding: 3rem 0; display: flex; justify-content: space-between; align-items: center; }
+    .logo { font-family: var(--font-display); font-size: 1.5rem; font-weight: 700; letter-spacing: -0.03em; }
+
+    /* Navigation Tabs */
+    .mode-nav {
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .logo {
-      font-family: var(--font-display);
-      font-size: 1.5rem;
-      font-weight: 700;
-      letter-spacing: -0.03em;
-    }
-
-    /* Layout */
-    .hero h1 { 
-      font-family: var(--font-display); 
-      font-size: clamp(2.5rem, 8vw, 4.5rem); 
-      line-height: 1; 
-      letter-spacing: -0.04em; 
-      margin-bottom: 4rem; 
-    }
-    
-    .app-wrapper {
-      display: grid;
-      grid-template-columns: 1fr 450px;
-      gap: 5rem;
-      align-items: start;
-      padding-bottom: 8rem;
-    }
-
-    .glass-card {
-      background: var(--surface);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid var(--border);
-      border-radius: 24px;
-      padding: 2rem;
-    }
-
-    .label {
-      font-size: 10px;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 0.15em;
-      color: var(--text-muted);
-      margin-bottom: 1.5rem;
-      display: block;
-    }
-
-    /* Fix Visibilitas Input */
-    input {
-      width: 100%;
-      background: var(--input-bg);
-      border: none;
+      gap: 1.5rem;
+      margin-bottom: 3rem;
       border-bottom: 1px solid var(--border);
-      color: var(--text); /* Memastikan teks terlihat di dark/light mode */
-      padding: 1rem 0.5rem;
-      font-size: 1.1rem;
-      outline: none;
-      transition: var(--transition);
     }
 
-    input:focus {
-      border-color: var(--accent);
-      background: rgba(255, 255, 255, 0.05);
-    }
-
-    input::placeholder {
-      color: var(--text-muted);
-      opacity: 0.5;
-    }
-
-    /* Buttons */
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      padding: 1rem 2rem;
-      font-size: 13px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      cursor: pointer;
-      border: 1px solid var(--border);
-      background: transparent;
-      color: var(--text);
-      border-radius: 12px;
-      transition: var(--transition);
-    }
-
-    .btn:hover {
-      background: var(--text);
-      color: var(--bg);
-    }
-
-    .btn-accent {
-      background: var(--text);
-      color: var(--bg);
-      border: none;
-    }
-
-    /* Song Item */
-    .song-item {
-      margin-bottom: 2.5rem;
-      padding: 1.5rem;
-      background: rgba(255, 255, 255, 0.02);
-      border-radius: 16px;
-      position: relative;
-    }
-
-    .btn-remove {
-      position: absolute;
-      right: 1.5rem;
-      top: 1.5rem;
+    .tab-btn {
       background: none;
       border: none;
       color: var(--text-muted);
+      padding: 1rem 0;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
       cursor: pointer;
-      font-size: 1.2rem;
-    }
-
-    /* Mode Toggle Icon */
-    #themeToggle {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      width: 44px;
-      height: 44px;
-      border-radius: 12px;
-      color: var(--text);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.2rem;
+      position: relative;
       transition: var(--transition);
     }
 
-    #themeToggle:hover {
-      border-color: var(--text);
-    }
-
-    /* Output */
-    .sql-area {
+    .tab-btn.active { color: var(--text); }
+    .tab-btn.active::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 0;
       width: 100%;
-      height: 450px;
-      background: rgba(0,0,0,0.2);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 1.2rem;
-      color: var(--accent);
-      font-family: var(--font-mono);
-      font-size: 12px;
-      line-height: 1.6;
-      resize: none;
-      outline: none;
+      height: 2px;
+      background: var(--accent);
     }
 
-    @media (max-width: 1000px) {
-      .app-wrapper { grid-template-columns: 1fr; gap: 3rem; }
-      .hero h1 { font-size: 3rem; }
-    }
+    /* Layout */
+    .app-wrapper { display: grid; grid-template-columns: 1fr 450px; gap: 5rem; padding-bottom: 8rem; }
+    .glass-card { background: var(--surface); backdrop-filter: blur(20px); border: 1px solid var(--border); border-radius: 24px; padding: 2rem; }
+    .label { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.15em; color: var(--text-muted); margin-bottom: 1rem; display: block; }
+
+    input { width: 100%; background: var(--input-bg); border: none; border-bottom: 1px solid var(--border); color: var(--text); padding: 0.75rem 0.5rem; font-size: 1rem; outline: none; margin-bottom: 1.5rem; }
+    input:focus { border-color: var(--accent); }
+
+    .btn { padding: 1rem 2rem; font-size: 12px; font-weight: 700; text-transform: uppercase; cursor: pointer; border: 1px solid var(--border); background: transparent; color: var(--text); border-radius: 12px; transition: var(--transition); }
+    .btn:hover { background: var(--text); color: var(--bg); }
+    .btn-accent { background: var(--text); color: var(--bg); border: none; }
+
+    .song-item { background: rgba(255, 255, 255, 0.02); padding: 1.5rem; border-radius: 16px; margin-bottom: 1.5rem; position: relative; }
+    .btn-remove { position: absolute; right: 1rem; top: 1rem; border: none; background: none; color: var(--text-muted); cursor: pointer; }
+
+    .sql-area { width: 100%; height: 450px; background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 12px; padding: 1.2rem; color: var(--accent); font-family: var(--font-mono); font-size: 12px; line-height: 1.6; resize: none; outline: none; }
+
+    #themeToggle { background: var(--surface); border: 1px solid var(--border); width: 44px; height: 44px; border-radius: 12px; color: var(--text); cursor: pointer; font-size: 1.2rem; }
+
+    /* Hidden utility */
+    .hidden { display: none; }
+
+    @media (max-width: 1000px) { .app-wrapper { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
 
   <header class="container">
-    <div class="logo">STUDIO.</div>
-    <button id="themeToggle" title="Toggle Theme">
-      <span id="themeIcon">☼</span>
-    </button>
+    <div class="logo">SQL.STUDIO</div>
+    <button id="themeToggle"><span id="themeIcon">☼</span></button>
   </header>
 
   <main class="container">
-    <section class="hero">
-      <h1>SQL<br>Statement.</h1>
-    </section>
+    <nav class="mode-nav">
+      <button class="tab-btn active" onclick="setMode('genre')">01 Genre Only</button>
+      <button class="tab-btn" onclick="setMode('single')">02 Single Track</button>
+      <button class="tab-btn" onclick="setMode('multi')">03 Multi Track</button>
+    </nav>
 
     <div class="app-wrapper">
-      <section>
-        <div style="margin-bottom: 4rem;">
-          <span class="label">01 Category</span>
+      <section id="input-section">
+        
+        <div id="mode-genre">
+          <span class="label">Register Category</span>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
-            <input type="text" id="genreName" placeholder="Genre Name (ex: Koplo)">
-            <input type="text" id="genreSlug" placeholder="Slug (ex: koplo)">
+            <input type="text" id="g-name" placeholder="Genre Name">
+            <input type="text" id="g-slug" placeholder="Slug">
           </div>
         </div>
 
-        <div style="margin-bottom: 4rem;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-            <span class="label" style="margin: 0;">02 Tracklist</span>
-            <button class="btn" id="addSongBtn" style="padding: 0.5rem 1rem; border-radius: 8px;">+ Add</button>
-          </div>
-
+        <div id="track-container" class="hidden">
+          <span class="label">Target Slug</span>
+          <input type="text" id="target-slug" placeholder="Reference Genre Slug (e.g. koplo)">
+          
           <div id="songBuilder"></div>
 
-          <div style="display: flex; gap: 1rem; margin-top: 3rem;">
-            <button class="btn btn-accent" id="generateSqlBtn">Generate SQL</button>
-            <button class="btn" id="resetBtn">Reset</button>
+          <div id="multi-tools" class="hidden" style="margin-bottom: 2rem;">
+            <button class="btn" id="addSongBtn" style="padding: 0.5rem 1rem;">+ Add Row</button>
           </div>
+        </div>
+
+        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+          <button class="btn btn-accent" id="generateSqlBtn">Generate SQL</button>
+          <button class="btn" id="resetBtn">Reset</button>
         </div>
       </section>
 
       <aside>
         <div class="glass-card">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-            <span class="label" style="margin: 0;">Raw Output</span>
-            <button id="copyBtn" style="background:none; border:none; color:var(--text); font-size: 10px; font-weight: 800; cursor:pointer; letter-spacing: 0.1em;">COPY</button>
+            <span class="label" style="margin: 0;">SQL Statement</span>
+            <button id="copyBtn" style="background:none; border:none; color:var(--text); font-size: 10px; font-weight: 800; cursor:pointer;">COPY</button>
           </div>
-          <textarea id="sqlOutput" class="sql-area" readonly placeholder="Output will appear here..."></textarea>
+          <textarea id="sqlOutput" class="sql-area" readonly placeholder="Output murni..."></textarea>
         </div>
       </aside>
     </div>
@@ -265,75 +155,70 @@
   <template id="songItemTemplate">
     <div class="song-item">
       <button class="btn-remove song-remove-btn">✕</button>
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
-        <div>
-          <label class="label" style="font-size: 8px; margin-bottom: 4px;">Title</label>
-          <input type="text" class="song-track-title" placeholder="Track Title">
-        </div>
-        <div>
-          <label class="label" style="font-size: 8px; margin-bottom: 4px;">Artist</label>
-          <input type="text" class="song-track-artist" placeholder="Artist Name">
-        </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+        <input type="text" class="song-track-title" placeholder="Track Title">
+        <input type="text" class="song-track-artist" placeholder="Artist">
       </div>
-      <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem;">
-        <div>
-          <label class="label" style="font-size: 8px; margin-bottom: 4px;">URL</label>
-          <input type="url" class="song-track-url" placeholder="YouTube Link">
-        </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
-           <div>
-            <label class="label" style="font-size: 8px; margin-bottom: 4px;">ID</label>
-            <input type="text" class="song-track-video-id">
-           </div>
-           <div>
-            <label class="label" style="font-size: 8px; margin-bottom: 4px;">Sort</label>
-            <input type="number" class="song-track-order">
-           </div>
-        </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr 0.5fr; gap: 1.5rem;">
+        <input type="url" class="song-track-url" placeholder="YouTube URL">
+        <input type="text" class="song-track-video-id" placeholder="Video ID">
+        <input type="number" class="song-track-order" placeholder="Sort">
       </div>
     </div>
   </template>
 
   <script>
+    let currentMode = 'genre';
+
     const refs = {
       themeToggle: document.getElementById('themeToggle'),
       themeIcon: document.getElementById('themeIcon'),
-      genreName: document.getElementById('genreName'),
-      genreSlug: document.getElementById('genreSlug'),
-      addSongBtn: document.getElementById('addSongBtn'),
-      generateSqlBtn: document.getElementById('generateSqlBtn'),
-      resetBtn: document.getElementById('resetBtn'),
       songBuilder: document.getElementById('songBuilder'),
       songItemTemplate: document.getElementById('songItemTemplate'),
-      sqlOutput: document.getElementById('sqlOutput'),
-      copyBtn: document.getElementById('copyBtn')
+      sqlOutput: document.getElementById('sqlOutput')
     };
 
-    let theme = 'dark';
+    // Mode Controller
+    function setMode(mode) {
+      currentMode = mode;
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      event.target.classList.add('active');
 
-    // Theme Switcher Logic
+      document.getElementById('mode-genre').classList.add('hidden');
+      document.getElementById('track-container').classList.add('hidden');
+      document.getElementById('multi-tools').classList.add('hidden');
+      
+      refs.songBuilder.innerHTML = '';
+
+      if (mode === 'genre') {
+        document.getElementById('mode-genre').classList.remove('hidden');
+      } else {
+        document.getElementById('track-container').classList.remove('hidden');
+        addSongItem();
+        if (mode === 'multi') document.getElementById('multi-tools').classList.remove('hidden');
+      }
+    }
+
+    // Theme Switch
     refs.themeToggle.addEventListener('click', () => {
-      theme = theme === 'dark' ? 'light' : 'dark';
-      document.documentElement.setAttribute('data-theme', theme);
-      refs.themeIcon.textContent = theme === 'dark' ? '☼' : '☾';
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      const next = isDark ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      refs.themeIcon.textContent = next === 'dark' ? '☼' : '☾';
     });
 
-    // Auto Slugify
-    refs.genreName.addEventListener('input', (e) => {
-      refs.genreSlug.value = e.target.value.toLowerCase()
-        .replace(/[^\w ]+/g, '')
-        .replace(/ +/g, '-');
+    // Auto Slugify untuk Mode 1
+    document.getElementById('g-name').addEventListener('input', (e) => {
+      document.getElementById('g-slug').value = e.target.value.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
     });
 
     function addSongItem() {
       const clone = refs.songItemTemplate.content.cloneNode(true);
-      const itemsCount = refs.songBuilder.querySelectorAll('.song-item').length + 1;
-      
-      const orderInput = clone.querySelector('.song-track-order');
-      orderInput.value = itemsCount;
-
       const urlInput = clone.querySelector('.song-track-url');
       const idInput = clone.querySelector('.song-track-video-id');
+      const orderInput = clone.querySelector('.song-track-order');
+      
+      orderInput.value = refs.songBuilder.children.length + 1;
 
       urlInput.addEventListener('input', (e) => {
         const id = e.target.value.match(/(?:youtu\.be\/|youtube\.com\/(?:v\/|u\/\w\/|embed\/|watch\?v=|\&v=))([^#\&\?]*)/);
@@ -341,31 +226,34 @@
       });
 
       clone.querySelector('.song-remove-btn').addEventListener('click', (e) => {
-        e.target.closest('.song-item').remove();
+        if (currentMode === 'multi') e.target.closest('.song-item').remove();
       });
 
       refs.songBuilder.appendChild(clone);
     }
 
     function generateSql() {
-      const gName = refs.genreName.value.trim().replace(/'/g, "''");
-      const gSlug = refs.genreSlug.value.trim();
+      let sql = '';
 
-      if (!gName) return alert('Category name is required.');
+      if (currentMode === 'genre') {
+        const name = document.getElementById('g-name').value.trim().replace(/'/g, "''");
+        const slug = document.getElementById('g-slug').value.trim();
+        if (!name) return alert('Fill Genre Name');
+        sql = `INSERT OR IGNORE INTO genres (name, slug) VALUES ('${name}', '${slug}');`;
+      } 
+      else {
+        const slug = document.getElementById('target-slug').value.trim();
+        if (!slug) return alert('Fill Target Genre Slug');
 
-      // SQL bersih tanpa komentar
-      let sql = `INSERT OR IGNORE INTO genres (name, slug) VALUES ('${gName}', '${gSlug}');\n\n`;
-      
-      const tracks = Array.from(refs.songBuilder.querySelectorAll('.song-item'));
-      if (tracks.length > 0) {
-        sql += `INSERT INTO tracks (genre_id, title, artist, youtube_url, youtube_video_id, sort_order) VALUES\n`;
+        const tracks = Array.from(refs.songBuilder.querySelectorAll('.song-item'));
+        sql = `INSERT INTO tracks (genre_id, title, artist, youtube_url, youtube_video_id, sort_order) VALUES\n`;
         const values = tracks.map(t => {
           const title = t.querySelector('.song-track-title').value.replace(/'/g, "''");
           const artist = t.querySelector('.song-track-artist').value.replace(/'/g, "''");
           const url = t.querySelector('.song-track-url').value;
           const vid = t.querySelector('.song-track-video-id').value;
           const order = t.querySelector('.song-track-order').value;
-          return `((SELECT id FROM genres WHERE slug = '${gSlug}'), '${title}', '${artist}', '${url}', '${vid}', ${order})`;
+          return `((SELECT id FROM genres WHERE slug = '${slug}'), '${title}', '${artist}', '${url}', '${vid}', ${order})`;
         });
         sql += values.join(',\n') + ';';
       }
@@ -373,18 +261,16 @@
       refs.sqlOutput.value = sql;
     }
 
-    refs.addSongBtn.addEventListener('click', addSongItem);
-    refs.generateSqlBtn.addEventListener('click', generateSql);
-    refs.resetBtn.addEventListener('click', () => confirm('Reset all?') && location.reload());
-    refs.copyBtn.addEventListener('click', () => {
+    document.getElementById('addSongBtn').addEventListener('click', addSongItem);
+    document.getElementById('generateSqlBtn').addEventListener('click', generateSql);
+    document.getElementById('copyBtn').addEventListener('click', () => {
       refs.sqlOutput.select();
       document.execCommand('copy');
-      refs.copyBtn.textContent = 'COPIED';
-      setTimeout(() => refs.copyBtn.textContent = 'COPY', 2000);
+      const b = document.getElementById('copyBtn');
+      b.textContent = 'COPIED';
+      setTimeout(() => b.textContent = 'COPY', 2000);
     });
-
-    // Start with 1 row
-    addSongItem();
+    document.getElementById('resetBtn').addEventListener('click', () => location.reload());
   </script>
 </body>
 </html>
