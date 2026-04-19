@@ -1,10 +1,9 @@
 <!DOCTYPE html>
-<html lang="id" data-theme="dark">
+<html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>XuiPlay</title>
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Music Station | Minimalist Player</title>
   <link rel="preconnect" href="https://api.fontshare.com">
   <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&f[]=boska@400,500,700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./css/styles.css">
@@ -13,56 +12,50 @@
   <header class="topbar">
     <div class="brand">
       <div class="logo">♪</div>
-      <h1>Xui<span>Play</span></h1>
+      <h1>Music<span>Station</span></h1>
     </div>
-    <div class="topbar-actions">
-      <button class="icon-btn" id="themeToggle" type="button" title="Ganti Tema">☀</button>
-    </div>
+    <button id="themeToggle" class="icon-btn" aria-label="Toggle Theme">☾</button>
   </header>
 
-  <main class="main-shell">
+  <main class="container">
     <section class="player-card">
-      <div class="now-playing">
-        <h2 id="nowTitle">Pilih Lagu</h2>
-        <p id="nowArtist" class="muted">Pilih daftar di bawah</p>
+      <div class="track-display">
+        <h2 id="nowTitle">Pilih lagu...</h2>
+        <p id="nowArtist" class="muted">Siap memutar musik favoritmu</p>
       </div>
 
-      <div class="scrubber-container">
+      <div class="progress-area">
         <div class="time-labels">
           <span id="currentTime">0:00</span>
           <span id="durationTime">0:00</span>
         </div>
-        <input type="range" id="timeBar" value="0" min="0" max="100" step="0.1">
+        <input type="range" id="timeBar" value="0" min="0" max="100" step="1">
       </div>
 
       <div class="controls">
-        <button id="prevBtn" class="control-btn" aria-label="Lagu Sebelumnya">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
-        </button>
-        <button id="playPauseBtn" class="play-btn" aria-label="Putar/Jeda">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-        </button>
-        <button id="nextBtn" class="control-btn" aria-label="Lagu Berikutnya">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6h2v12h-2z"/></svg>
-        </button>
+        <button id="prevBtn" class="control-btn" title="Previous">⏮</button>
+        <button id="playPauseBtn" class="play-btn">▶</button>
+        <button id="nextBtn" class="control-btn" title="Next">⏭</button>
       </div>
     </section>
 
     <section class="playlist-card">
-      <nav class="genre-container">
-        <div id="genreTabs" class="genre-tabs"></div>
+      <nav class="genre-nav">
+        <div id="genreTabs" class="genre-scroll">
+          </div>
       </nav>
 
-      <div class="playlist-header">
-        <h3 id="genreHeading">Playlist</h3>
-        <span id="trackCount" class="badge">0 track</span>
+      <div class="playlist-meta">
+        <h3 id="genreHeading">Daftar Lagu</h3>
+        <span id="trackCount" class="badge">0 Track</span>
       </div>
 
-      <div id="playlistContainer" class="playlist-list"></div>
+      <div id="playlistContainer" class="playlist-items">
+        </div>
     </section>
   </main>
 
-  <div id="youtube-player" class="yt-hidden"></div>
+  <div id="youtube-player" class="hidden-player"></div>
 
   <script src="./js/app.js"></script>
 </body>
