@@ -16,10 +16,7 @@
       <h1>Music<span>Station</span></h1>
     </div>
     <div class="topbar-actions">
-      <button class="icon-btn" id="eqToggleBtn" type="button" aria-expanded="false" title="Equalizer">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 21v-7M4 10V3M12 21v-4M12 10V3M20 21v-9M20 5V3M2 10h4M10 10h4M18 12h4"/></svg>
-      </button>
-      <button class="icon-btn" id="themeToggle" type="button">☀</button>
+      <button class="icon-btn" id="themeToggle" type="button" title="Ganti Tema">☀</button>
     </div>
   </header>
 
@@ -39,23 +36,16 @@
       </div>
 
       <div class="controls">
-        <button id="prevBtn" class="control-btn">⏮</button>
-        <button id="playPauseBtn" class="play-btn">▶</button>
-        <button id="nextBtn" class="control-btn">⏭</button>
+        <button id="prevBtn" class="control-btn" aria-label="Lagu Sebelumnya">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+        </button>
+        <button id="playPauseBtn" class="play-btn" aria-label="Putar/Jeda">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+        </button>
+        <button id="nextBtn" class="control-btn" aria-label="Lagu Berikutnya">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6h2v12h-2z"/></svg>
+        </button>
       </div>
-
-      <aside class="eq-panel" id="eqPanel" hidden>
-        <div class="eq-header">
-          <h3>Equalizer</h3>
-          <div class="preset-group">
-            <button class="preset-btn active" data-preset="flat">Flat</button>
-            <button class="preset-btn" data-preset="warm">Warm</button>
-            <button class="preset-btn" data-preset="club">Club</button>
-          </div>
-        </div>
-        <div class="eq-sliders" id="eqSliders"></div>
-        <div id="eqVisualizer" style="display: none;"></div>
-      </aside>
     </section>
 
     <section class="playlist-card">
