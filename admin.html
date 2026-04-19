@@ -24,20 +24,19 @@
       --space-6: 1.5rem;
       --space-8: 2rem;
       --space-10: 2.5rem;
-      --space-12: 3rem;
 
       --color-bg: #f7f6f2;
       --color-surface: rgba(255, 255, 255, 0.78);
       --color-surface-2: #fbfaf7;
-      --color-surface-3: #f1eee8;
+      --color-surface-3: #f0ede8;
       --color-border: rgba(40, 37, 29, 0.12);
       --color-text: #28251d;
-      --color-text-muted: #777168;
+      --color-text-muted: #746f66;
       --color-primary: #01696f;
       --color-primary-hover: #0c4e54;
       --color-primary-soft: rgba(1, 105, 111, 0.1);
       --color-danger: #a12c7b;
-      --color-warning: #da7101;
+      --color-danger-soft: rgba(161, 44, 123, 0.1);
       --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.05);
       --shadow-lg: 0 20px 50px rgba(0, 0, 0, 0.08);
 
@@ -52,24 +51,23 @@
     }
 
     [data-theme="dark"] {
-      --color-bg: #161513;
-      --color-surface: rgba(29, 28, 26, 0.84);
+      --color-bg: #171614;
+      --color-surface: rgba(29, 28, 26, 0.86);
       --color-surface-2: #201f1c;
-      --color-surface-3: #282622;
+      --color-surface-3: #292722;
       --color-border: rgba(255, 255, 255, 0.11);
-      --color-text: #ece6db;
-      --color-text-muted: #a59f93;
+      --color-text: #ece5db;
+      --color-text-muted: #a69f93;
       --color-primary: #4f98a3;
-      --color-primary-hover: #78b7bf;
-      --color-primary-soft: rgba(79, 152, 163, 0.14);
+      --color-primary-hover: #77b5bd;
+      --color-primary-soft: rgba(79, 152, 163, 0.16);
       --color-danger: #de6cae;
-      --color-warning: #ffb154;
+      --color-danger-soft: rgba(222, 108, 174, 0.12);
       --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.18);
       --shadow-lg: 0 22px 56px rgba(0, 0, 0, 0.34);
     }
 
     * { box-sizing: border-box; }
-
     html {
       scroll-behavior: smooth;
       -webkit-font-smoothing: antialiased;
@@ -79,20 +77,20 @@
     body {
       margin: 0;
       min-height: 100vh;
-      font-family: var(--font-body);
-      font-size: var(--text-base);
-      color: var(--color-text);
       background:
         radial-gradient(circle at top left, rgba(1, 105, 111, 0.1), transparent 24%),
         radial-gradient(circle at top right, rgba(161, 44, 123, 0.08), transparent 18%),
         var(--color-bg);
+      color: var(--color-text);
+      font-family: var(--font-body);
+      font-size: var(--text-base);
     }
 
-    img, svg { display: block; max-width: 100%; }
-    button, input, textarea, select { font: inherit; color: inherit; }
-    button { cursor: pointer; }
     h1, h2, h3, h4, p { margin: 0; }
-    a { color: inherit; text-decoration: none; }
+    button, input, textarea { font: inherit; color: inherit; }
+    button { cursor: pointer; }
+    textarea { resize: vertical; }
+    code, pre, textarea.output-area { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
 
     .skip-link {
       position: absolute;
@@ -105,7 +103,7 @@
       top: 1rem;
       z-index: 1000;
       background: var(--color-primary);
-      color: white;
+      color: #fff;
       padding: 0.75rem 1rem;
       border-radius: var(--radius-md);
     }
@@ -113,10 +111,10 @@
     .topbar {
       position: sticky;
       top: 0;
-      z-index: 30;
+      z-index: 20;
       display: flex;
-      align-items: center;
       justify-content: space-between;
+      align-items: center;
       gap: var(--space-4);
       padding: var(--space-4) var(--space-5);
       backdrop-filter: blur(16px);
@@ -136,18 +134,18 @@
       border-radius: 14px;
       display: grid;
       place-items: center;
-      color: white;
       background: linear-gradient(135deg, var(--color-primary), var(--color-danger));
-      box-shadow: var(--shadow-sm);
+      color: white;
       font-weight: 700;
+      box-shadow: var(--shadow-sm);
     }
 
     .eyebrow {
+      margin-bottom: 0.2rem;
       font-size: var(--text-xs);
       text-transform: uppercase;
       letter-spacing: 0.12em;
       color: var(--color-text-muted);
-      margin-bottom: 0.2rem;
     }
 
     .brand-title {
@@ -156,23 +154,13 @@
       line-height: 1;
     }
 
-    .top-actions {
-      display: flex;
-      align-items: center;
-      gap: var(--space-3);
-    }
-
     .icon-btn,
     .soft-btn,
     .primary-btn,
-    .danger-btn,
-    .tab-btn,
-    .copy-btn {
-      border: 1px solid var(--color-border);
-      background: var(--color-surface);
-      color: var(--color-text);
-      border-radius: var(--radius-full);
+    .danger-btn {
       min-height: 44px;
+      border-radius: var(--radius-full);
+      border: 1px solid var(--color-border);
       transition: 180ms ease;
     }
 
@@ -181,15 +169,15 @@
       min-width: 44px;
       display: grid;
       place-items: center;
-      padding: 0;
+      background: var(--color-surface);
     }
 
     .soft-btn,
     .primary-btn,
-    .danger-btn,
-    .tab-btn,
-    .copy-btn {
+    .danger-btn {
       padding: 0.8rem 1rem;
+      background: var(--color-surface);
+      color: var(--color-text);
     }
 
     .primary-btn {
@@ -203,22 +191,20 @@
     }
 
     .danger-btn {
-      background: color-mix(in srgb, var(--color-danger) 14%, var(--color-surface));
+      background: var(--color-danger-soft);
       color: var(--color-danger);
-      border-color: color-mix(in srgb, var(--color-danger) 22%, transparent);
+      border-color: color-mix(in srgb, var(--color-danger) 24%, transparent);
     }
 
     .icon-btn:hover,
     .soft-btn:hover,
-    .danger-btn:hover,
-    .tab-btn:hover,
-    .copy-btn:hover {
-      transform: translateY(-1px);
+    .danger-btn:hover {
       background: var(--color-surface-2);
+      transform: translateY(-1px);
     }
 
     .page {
-      width: min(1180px, calc(100% - 2rem));
+      width: min(1120px, calc(100% - 2rem));
       margin: 0 auto;
       padding: var(--space-6) 0 var(--space-8);
       display: grid;
@@ -226,7 +212,7 @@
     }
 
     .hero,
-    .panel,
+    .card,
     .output-card,
     .note-card {
       background: var(--color-surface);
@@ -239,120 +225,76 @@
     .hero {
       padding: var(--space-6);
       display: grid;
-      grid-template-columns: 1.2fr 0.8fr;
+      grid-template-columns: 1.15fr 0.85fr;
       gap: var(--space-6);
       align-items: center;
     }
 
     .hero h2 {
-      font-family: var(--font-display);
-      font-size: clamp(2rem, 1.3rem + 2.1vw, 3.6rem);
-      line-height: 1.04;
       margin-bottom: var(--space-3);
-      max-width: 11ch;
+      font-family: var(--font-display);
+      font-size: clamp(2rem, 1.3rem + 2vw, 3.4rem);
+      line-height: 1.05;
+      max-width: 12ch;
     }
 
     .hero p {
-      color: var(--color-text-muted);
-      max-width: 60ch;
-      margin-bottom: var(--space-4);
-    }
-
-    .hero-badges {
-      display: flex;
-      flex-wrap: wrap;
-      gap: var(--space-3);
-    }
-
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      min-height: 40px;
-      padding: 0.55rem 0.85rem;
-      border-radius: var(--radius-full);
-      background: var(--color-surface-2);
-      border: 1px solid var(--color-border);
-      font-size: var(--text-sm);
+      max-width: 58ch;
       color: var(--color-text-muted);
     }
 
-    .hero-grid {
+    .hero-stats {
       display: grid;
       gap: var(--space-3);
     }
 
-    .mini-stat {
+    .stat {
       padding: var(--space-4);
       border-radius: var(--radius-lg);
       background: var(--color-surface-2);
       border: 1px solid var(--color-border);
     }
 
-    .mini-stat strong {
+    .stat strong {
       display: block;
       margin-top: 0.2rem;
       font-size: var(--text-lg);
     }
 
-    .workspace {
+    .layout {
       display: grid;
-      grid-template-columns: 1.2fr 0.8fr;
+      grid-template-columns: 1.15fr 0.85fr;
       gap: var(--space-5);
       align-items: start;
     }
 
-    .panel {
+    .card,
+    .output-card {
       padding: var(--space-5);
-      display: grid;
-      gap: var(--space-5);
     }
 
-    .tabs {
-      display: flex;
-      gap: var(--space-3);
-      overflow-x: auto;
-      padding-bottom: var(--space-1);
-    }
-
-    .tab-btn {
-      white-space: nowrap;
-      min-height: 44px;
-      background: var(--color-surface-2);
-    }
-
-    .tab-btn.active {
-      background: var(--color-primary);
-      color: white;
-      border-color: transparent;
-    }
-
-    .section {
-      display: none;
-      gap: var(--space-4);
-    }
-
-    .section.active {
-      display: grid;
+    .section-head {
+      margin-bottom: var(--space-4);
     }
 
     .section-head h3 {
-      font-size: var(--text-lg);
       margin-bottom: 0.3rem;
+      font-size: var(--text-lg);
     }
 
     .section-head p {
       color: var(--color-text-muted);
     }
 
+    .form-stack {
+      display: grid;
+      gap: var(--space-5);
+    }
+
     .form-grid {
       display: grid;
       gap: var(--space-4);
       grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .form-grid.single {
-      grid-template-columns: 1fr;
     }
 
     .field {
@@ -369,29 +311,54 @@
       color: var(--color-text-muted);
     }
 
+    .input-wrap {
+      position: relative;
+    }
+
     .field input,
-    .field textarea,
-    .field select {
+    .field textarea {
       width: 100%;
       min-height: 48px;
       border-radius: var(--radius-md);
       border: 1px solid var(--color-border);
       background: var(--color-surface-2);
-      padding: 0 0.95rem;
+      padding: 0 2.8rem 0 0.95rem;
       outline: none;
     }
 
     .field textarea {
-      min-height: 110px;
-      padding: 0.85rem 0.95rem;
+      min-height: 120px;
+      padding: 0.85rem 2.8rem 0.85rem 0.95rem;
       resize: vertical;
     }
 
     .field input:focus,
     .field textarea:focus,
-    .field select:focus {
+    .output-area:focus {
       border-color: color-mix(in srgb, var(--color-primary) 40%, transparent);
       box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-primary) 14%, transparent);
+    }
+
+    .clear-input-btn {
+      position: absolute;
+      top: 50%;
+      right: 0.55rem;
+      transform: translateY(-50%);
+      width: 30px;
+      height: 30px;
+      min-width: 30px;
+      border-radius: 50%;
+      border: 1px solid var(--color-border);
+      background: var(--color-surface-3);
+      color: var(--color-text-muted);
+      display: none;
+      place-items: center;
+      padding: 0;
+      line-height: 1;
+    }
+
+    .input-wrap.has-value .clear-input-btn {
+      display: grid;
     }
 
     .hint {
@@ -399,7 +366,34 @@
       color: var(--color-text-muted);
     }
 
-    .toolbar {
+    .song-builder {
+      display: grid;
+      gap: var(--space-4);
+    }
+
+    .song-item {
+      padding: var(--space-4);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--color-border);
+      background: var(--color-surface-2);
+      display: grid;
+      gap: var(--space-4);
+    }
+
+    .song-item-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: var(--space-3);
+    }
+
+    .song-item-head h4 {
+      font-size: 1rem;
+    }
+
+    .song-tools,
+    .toolbar,
+    .output-tools {
       display: flex;
       gap: var(--space-3);
       flex-wrap: wrap;
@@ -408,7 +402,6 @@
     .output-card {
       position: sticky;
       top: 5.8rem;
-      padding: var(--space-4);
       display: grid;
       gap: var(--space-4);
     }
@@ -417,22 +410,22 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: var(--space-3);
+      gap: var(--space-4);
     }
 
     .output-head h3 {
       font-size: 1rem;
     }
 
-    .code-wrap {
+    .output-box {
       border-radius: var(--radius-lg);
       overflow: hidden;
       border: 1px solid var(--color-border);
       background: #111;
-      color: #eaf3ef;
+      color: #e8f2ee;
     }
 
-    .code-top {
+    .output-top {
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -440,25 +433,21 @@
       padding: 0.85rem 1rem;
       background: rgba(255,255,255,0.05);
       border-bottom: 1px solid rgba(255,255,255,0.08);
-    }
-
-    .code-top span {
       font-size: var(--text-sm);
-      color: #cfe3dc;
+      color: #cfe2dc;
     }
 
-    #sqlOutput {
+    .output-area {
       width: 100%;
-      min-height: 420px;
+      min-height: 480px;
       border: 0;
       outline: 0;
-      resize: vertical;
       background: transparent;
       color: inherit;
       padding: 1rem;
-      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
       font-size: 0.92rem;
       line-height: 1.6;
+      resize: vertical;
     }
 
     .note-card {
@@ -490,35 +479,12 @@
       color: var(--color-text-muted);
     }
 
-    .msg.success {
-      color: var(--color-primary);
-    }
-
-    .msg.error {
-      color: var(--color-danger);
-    }
-
-    .inline-actions {
-      display: flex;
-      gap: var(--space-2);
-      flex-wrap: wrap;
-    }
-
-    .pill {
-      display: inline-flex;
-      align-items: center;
-      min-height: 36px;
-      padding: 0 0.75rem;
-      border-radius: var(--radius-full);
-      background: var(--color-surface-2);
-      border: 1px solid var(--color-border);
-      font-size: var(--text-sm);
-      color: var(--color-text-muted);
-    }
+    .msg.success { color: var(--color-primary); }
+    .msg.error { color: var(--color-danger); }
 
     @media (max-width: 980px) {
       .hero,
-      .workspace {
+      .layout {
         grid-template-columns: 1fr;
       }
 
@@ -529,7 +495,7 @@
 
     @media (max-width: 720px) {
       .page {
-        width: min(100% - 1rem, 1180px);
+        width: min(100% - 1rem, 1120px);
         padding-top: 1rem;
       }
 
@@ -538,7 +504,7 @@
       }
 
       .hero,
-      .panel,
+      .card,
       .output-card,
       .note-card {
         padding: 1rem;
@@ -573,422 +539,238 @@
     <div class="brand">
       <div class="brand-mark">SQL</div>
       <div>
-        <p class="eyebrow">Admin generator</p>
+        <p class="eyebrow">Generator admin</p>
         <h1 class="brand-title">Music Station SQL</h1>
       </div>
     </div>
 
-    <div class="top-actions">
-      <button class="icon-btn" id="themeToggle" type="button" aria-label="Ganti tema">☾</button>
-    </div>
+    <button class="icon-btn" id="themeToggle" type="button" aria-label="Ganti tema">☾</button>
   </header>
 
   <main id="main-content" class="page">
     <section class="hero">
       <div>
-        <p class="eyebrow">Static HTML helper</p>
-        <h2>Generator SQL untuk genre dan lagu</h2>
-        <p>Isi form, lalu klik generate. Query SQL akan muncul di panel kanan dan bisa langsung kamu copy ke Turso shell.</p>
-        <div class="hero-badges">
-          <span class="badge">INSERT genre</span>
-          <span class="badge">UPDATE lagu</span>
-          <span class="badge">DELETE folder</span>
-          <span class="badge">Auto slug & video id</span>
-        </div>
+        <p class="eyebrow">One genre, many songs</p>
+        <h2>Generator SQL untuk satu genre dan beberapa lagu</h2>
+        <p>Isi data genre sekali, lalu tambahkan satu atau beberapa lagu. Output akan membuat SQL siap paste ke Turso shell, termasuk `INSERT OR IGNORE` untuk genre dan `INSERT` multi-row untuk lagu. [web:30][web:152]</p>
       </div>
 
-      <div class="hero-grid">
-        <div class="mini-stat">
-          <p class="eyebrow">Operasi</p>
-          <strong>Tambah, edit, hapus</strong>
+      <div class="hero-stats">
+        <div class="stat">
+          <p class="eyebrow">Genre</p>
+          <strong>1 genre sekali generate</strong>
         </div>
-        <div class="mini-stat">
-          <p class="eyebrow">Target</p>
-          <strong>genres & tracks</strong>
+        <div class="stat">
+          <p class="eyebrow">Lagu</p>
+          <strong>1 atau banyak baris</strong>
         </div>
-        <div class="mini-stat">
+        <div class="stat">
           <p class="eyebrow">Output</p>
-          <strong>SQL siap paste</strong>
+          <strong>SQL siap copy</strong>
         </div>
       </div>
     </section>
 
-    <section class="workspace">
-      <div class="panel">
-        <div class="tabs" role="tablist" aria-label="Jenis generator">
-          <button class="tab-btn active" type="button" data-tab="genre-add">Tambah Genre</button>
-          <button class="tab-btn" type="button" data-tab="genre-edit">Edit Genre</button>
-          <button class="tab-btn" type="button" data-tab="genre-delete">Hapus Genre</button>
-          <button class="tab-btn" type="button" data-tab="track-add">Tambah Lagu</button>
-          <button class="tab-btn" type="button" data-tab="track-edit">Edit Lagu</button>
-          <button class="tab-btn" type="button" data-tab="track-delete">Hapus Lagu</button>
+    <section class="layout">
+      <section class="card">
+        <div class="section-head">
+          <h3>Input generator</h3>
+          <p>Masukkan genre lalu tambah beberapa lagu dalam genre yang sama. YouTube video ID bisa otomatis diambil dari parameter `v=` pada URL YouTube atau dari format `youtu.be`. [web:155][web:158]</p>
         </div>
 
-        <section class="section active" id="section-genre-add">
-          <div class="section-head">
-            <h3>Tambah genre</h3>
-            <p>Membuat SQL untuk menambahkan folder genre baru.</p>
-          </div>
-
-          <div class="form-grid">
-            <div class="field">
-              <label for="genreAddName">Nama genre</label>
-              <input id="genreAddName" type="text" placeholder="Contoh: Koplo" />
+        <div class="form-stack">
+          <div>
+            <div class="section-head">
+              <h3>Genre</h3>
+              <p>Data genre akan dibuat satu kali dengan `INSERT OR IGNORE`.</p>
             </div>
 
-            <div class="field">
-              <label for="genreAddSlug">Slug genre</label>
-              <input id="genreAddSlug" type="text" placeholder="otomatis dari nama, contoh: koplo" />
-            </div>
+            <div class="form-grid">
+              <div class="field">
+                <label for="genreName">Nama genre</label>
+                <div class="input-wrap">
+                  <input id="genreName" type="text" placeholder="Contoh: Koplo" />
+                  <button class="clear-input-btn" type="button" data-clear-target="genreName" aria-label="Clear input">×</button>
+                </div>
+              </div>
 
-            <div class="field span-2">
-              <span class="hint">Kalau slug dikosongkan, generator akan membuat slug otomatis dari nama genre.</span>
-            </div>
-          </div>
-
-          <div class="toolbar">
-            <button class="primary-btn" type="button" id="btnGenreAdd">Generate SQL</button>
-          </div>
-        </section>
-
-        <section class="section" id="section-genre-edit">
-          <div class="section-head">
-            <h3>Edit genre</h3>
-            <p>Mengubah nama atau slug genre yang sudah ada.</p>
-          </div>
-
-          <div class="form-grid">
-            <div class="field">
-              <label for="genreEditOldSlug">Slug genre lama</label>
-              <input id="genreEditOldSlug" type="text" placeholder="Contoh: koplo" />
-            </div>
-
-            <div class="field">
-              <label for="genreEditNewSlug">Slug genre baru</label>
-              <input id="genreEditNewSlug" type="text" placeholder="Contoh: koplo-jawa" />
-            </div>
-
-            <div class="field span-2">
-              <label for="genreEditNewName">Nama genre baru</label>
-              <input id="genreEditNewName" type="text" placeholder="Contoh: Koplo Jawa" />
+              <div class="field">
+                <label for="genreSlug">Slug genre</label>
+                <div class="input-wrap">
+                  <input id="genreSlug" type="text" placeholder="Otomatis dari nama, contoh: koplo" />
+                  <button class="clear-input-btn" type="button" data-clear-target="genreSlug" aria-label="Clear input">×</button>
+                </div>
+              </div>
             </div>
           </div>
 
-          <div class="toolbar">
-            <button class="primary-btn" type="button" id="btnGenreEdit">Generate SQL</button>
-          </div>
-        </section>
-
-        <section class="section" id="section-genre-delete">
-          <div class="section-head">
-            <h3>Hapus genre</h3>
-            <p>Bisa pilih hapus lagunya dulu atau langsung hapus genre saja.</p>
-          </div>
-
-          <div class="form-grid">
-            <div class="field">
-              <label for="genreDeleteSlug">Slug genre</label>
-              <input id="genreDeleteSlug" type="text" placeholder="Contoh: koplo" />
+          <div>
+            <div class="section-head">
+              <h3>Lagu</h3>
+              <p>Tambah satu atau beberapa lagu. Setiap lagu punya judul, artist, YouTube URL, video ID, dan sort order.</p>
             </div>
 
-            <div class="field">
-              <label for="genreDeleteMode">Mode hapus</label>
-              <select id="genreDeleteMode">
-                <option value="with-tracks">Hapus lagu lalu hapus genre</option>
-                <option value="only-genre">Hapus genre saja</option>
-              </select>
+            <div id="songBuilder" class="song-builder"></div>
+
+            <div class="toolbar">
+              <button class="soft-btn" type="button" id="addSongBtn">+ Tambah lagu</button>
+              <button class="danger-btn" type="button" id="clearAllInputsBtn">Clear semua input</button>
+              <button class="primary-btn" type="button" id="generateSqlBtn">Generate SQL</button>
             </div>
           </div>
 
-          <div class="toolbar">
-            <button class="danger-btn" type="button" id="btnGenreDelete">Generate SQL</button>
-          </div>
-        </section>
-
-        <section class="section" id="section-track-add">
-          <div class="section-head">
-            <h3>Tambah lagu</h3>
-            <p>Masukkan genre, judul, artist, dan URL YouTube. Video ID akan diambil otomatis dari link bila memungkinkan.</p>
-          </div>
-
-          <div class="form-grid">
-            <div class="field">
-              <label for="trackAddGenreSlug">Slug genre</label>
-              <input id="trackAddGenreSlug" type="text" placeholder="Contoh: koplo" />
-            </div>
-
-            <div class="field">
-              <label for="trackAddTitle">Judul lagu</label>
-              <input id="trackAddTitle" type="text" placeholder="Contoh: GADIS MANIS KALIMANTAN" />
-            </div>
-
-            <div class="field">
-              <label for="trackAddArtist">Artist</label>
-              <input id="trackAddArtist" type="text" placeholder="Contoh: LAILA AYU - SIMPATIK MUSIC" />
-            </div>
-
-            <div class="field">
-              <label for="trackAddSortOrder">Sort order</label>
-              <input id="trackAddSortOrder" type="number" value="0" min="0" />
-            </div>
-
-            <div class="field span-2">
-              <label for="trackAddYoutubeUrl">YouTube URL</label>
-              <input id="trackAddYoutubeUrl" type="url" placeholder="https://www.youtube.com/watch?v=..." />
-            </div>
-
-            <div class="field">
-              <label for="trackAddVideoId">YouTube video ID</label>
-              <input id="trackAddVideoId" type="text" placeholder="otomatis dari URL, tapi bisa diisi manual" />
-            </div>
-
-            <div class="field span-2">
-              <span class="hint">Kolom tambahan seperti cover_url dan accent_color sengaja tidak dipakai supaya schema lebih sederhana.</span>
-            </div>
-          </div>
-
-          <div class="toolbar">
-            <button class="primary-btn" type="button" id="btnTrackAdd">Generate SQL</button>
-          </div>
-        </section>
-
-        <section class="section" id="section-track-edit">
-          <div class="section-head">
-            <h3>Edit lagu</h3>
-            <p>Pilih satu acuan utama untuk mencari lagu, lalu isi hanya field yang ingin diubah.</p>
-          </div>
-
-          <div class="form-grid">
-            <div class="field">
-              <label for="trackEditLookupType">Cari berdasarkan</label>
-              <select id="trackEditLookupType">
-                <option value="youtube_video_id">YouTube video ID</option>
-                <option value="id">ID lagu</option>
-              </select>
-            </div>
-
-            <div class="field">
-              <label for="trackEditLookupValue">Nilai pencarian</label>
-              <input id="trackEditLookupValue" type="text" placeholder="Contoh: 0CRHQwNJW1c atau 12" />
-            </div>
-
-            <div class="field">
-              <label for="trackEditTitle">Judul baru</label>
-              <input id="trackEditTitle" type="text" placeholder="Kosongkan bila tidak diubah" />
-            </div>
-
-            <div class="field">
-              <label for="trackEditArtist">Artist baru</label>
-              <input id="trackEditArtist" type="text" placeholder="Kosongkan bila tidak diubah" />
-            </div>
-
-            <div class="field">
-              <label for="trackEditGenreSlug">Slug genre baru</label>
-              <input id="trackEditGenreSlug" type="text" placeholder="Kosongkan bila tidak dipindah" />
-            </div>
-
-            <div class="field">
-              <label for="trackEditSortOrder">Sort order baru</label>
-              <input id="trackEditSortOrder" type="number" min="0" placeholder="Kosongkan bila tidak diubah" />
-            </div>
-
-            <div class="field span-2">
-              <label for="trackEditYoutubeUrl">YouTube URL baru</label>
-              <input id="trackEditYoutubeUrl" type="url" placeholder="Kosongkan bila tidak diubah" />
-            </div>
-
-            <div class="field">
-              <label for="trackEditVideoId">YouTube video ID baru</label>
-              <input id="trackEditVideoId" type="text" placeholder="Bisa otomatis dari URL baru" />
-            </div>
-          </div>
-
-          <div class="toolbar">
-            <button class="primary-btn" type="button" id="btnTrackEdit">Generate SQL</button>
-          </div>
-        </section>
-
-        <section class="section" id="section-track-delete">
-          <div class="section-head">
-            <h3>Hapus lagu</h3>
-            <p>Hapus satu lagu berdasarkan ID atau YouTube video ID.</p>
-          </div>
-
-          <div class="form-grid">
-            <div class="field">
-              <label for="trackDeleteType">Hapus berdasarkan</label>
-              <select id="trackDeleteType">
-                <option value="youtube_video_id">YouTube video ID</option>
-                <option value="id">ID lagu</option>
-              </select>
-            </div>
-
-            <div class="field">
-              <label for="trackDeleteValue">Nilai</label>
-              <input id="trackDeleteValue" type="text" placeholder="Contoh: 0CRHQwNJW1c atau 10" />
-            </div>
-          </div>
-
-          <div class="toolbar">
-            <button class="danger-btn" type="button" id="btnTrackDelete">Generate SQL</button>
-          </div>
-        </section>
-
-        <div class="msg" id="messageBox" aria-live="polite"></div>
-      </div>
+          <div class="msg" id="messageBox" aria-live="polite"></div>
+        </div>
+      </section>
 
       <aside class="output-card">
         <div class="output-head">
           <h3>Output SQL</h3>
-          <div class="inline-actions">
-            <button class="copy-btn" type="button" id="copySqlBtn">Copy</button>
-            <button class="soft-btn" type="button" id="clearSqlBtn">Clear</button>
+          <div class="output-tools">
+            <button class="soft-btn" type="button" id="copyOutputBtn">Copy</button>
+            <button class="danger-btn" type="button" id="clearOutputBtn">Clear</button>
           </div>
         </div>
 
-        <div class="code-wrap">
-          <div class="code-top">
-            <span>Query siap paste ke Turso shell</span>
-            <span class="pill">SQLite / libSQL</span>
+        <div class="output-box">
+          <div class="output-top">
+            <span>SQL siap paste ke Turso shell</span>
+            <span>SQLite / libSQL</span>
           </div>
-          <textarea id="sqlOutput" spellcheck="false" placeholder="SQL akan muncul di sini..."></textarea>
+          <textarea id="sqlOutput" class="output-area" spellcheck="false" placeholder="SQL akan muncul di sini..."></textarea>
         </div>
 
         <div class="note-card">
           <h4>Catatan</h4>
           <ul>
-            <li>Generator ini hanya membuat SQL, tidak mengeksekusi query.</li>
-            <li>Untuk lagu, video ID bisa otomatis diambil dari URL YouTube.</li>
-            <li>Gunakan mode hapus genre dengan hati-hati bila ingin menghapus semua lagu di dalamnya.</li>
+            <li>SQLite mendukung insert banyak row dalam satu statement `VALUES (...), (...), ...`. [web:150][web:159]</li>
+            <li>Turso shell bisa langsung menjalankan SQL dengan `turso db shell nama-db "SQL..."`. [web:30]</li>
+            <li>Kolom `youtube_video_id` tetap penting untuk player berbasis YouTube IFrame API. [web:12]</li>
           </ul>
         </div>
       </aside>
     </section>
   </main>
 
-  <script>
-    const state = {
-      theme: window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
-    };
+  <template id="songItemTemplate">
+    <article class="song-item">
+      <div class="song-item-head">
+        <h4 class="song-title-label">Lagu 1</h4>
+        <div class="song-tools">
+          <button class="soft-btn song-duplicate-btn" type="button">Duplikat</button>
+          <button class="danger-btn song-remove-btn" type="button">Hapus</button>
+        </div>
+      </div>
 
+      <div class="form-grid">
+        <div class="field">
+          <label>Judul lagu</label>
+          <div class="input-wrap">
+            <input class="song-input song-track-title" type="text" placeholder="Contoh: GADIS MANIS KALIMANTAN" />
+            <button class="clear-input-btn" type="button" data-song-clear="title" aria-label="Clear input">×</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Artist</label>
+          <div class="input-wrap">
+            <input class="song-input song-track-artist" type="text" placeholder="Contoh: LAILA AYU - SIMPATIK MUSIC" />
+            <button class="clear-input-btn" type="button" data-song-clear="artist" aria-label="Clear input">×</button>
+          </div>
+        </div>
+
+        <div class="field span-2">
+          <label>YouTube URL</label>
+          <div class="input-wrap">
+            <input class="song-input song-track-url" type="url" placeholder="https://www.youtube.com/watch?v=..." />
+            <button class="clear-input-btn" type="button" data-song-clear="url" aria-label="Clear input">×</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>YouTube video ID</label>
+          <div class="input-wrap">
+            <input class="song-input song-track-video-id" type="text" placeholder="Otomatis dari URL, tapi bisa manual" />
+            <button class="clear-input-btn" type="button" data-song-clear="videoId" aria-label="Clear input">×</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Sort order</label>
+          <div class="input-wrap">
+            <input class="song-input song-track-order" type="number" min="0" value="0" />
+            <button class="clear-input-btn" type="button" data-song-clear="order" aria-label="Clear input">×</button>
+          </div>
+        </div>
+      </div>
+    </article>
+  </template>
+
+  <script>
     const refs = {
       themeToggle: document.getElementById('themeToggle'),
-      tabs: Array.from(document.querySelectorAll('.tab-btn')),
-      sections: Array.from(document.querySelectorAll('.section')),
+      genreName: document.getElementById('genreName'),
+      genreSlug: document.getElementById('genreSlug'),
+      addSongBtn: document.getElementById('addSongBtn'),
+      clearAllInputsBtn: document.getElementById('clearAllInputsBtn'),
+      generateSqlBtn: document.getElementById('generateSqlBtn'),
+      songBuilder: document.getElementById('songBuilder'),
+      songItemTemplate: document.getElementById('songItemTemplate'),
       sqlOutput: document.getElementById('sqlOutput'),
-      copySqlBtn: document.getElementById('copySqlBtn'),
-      clearSqlBtn: document.getElementById('clearSqlBtn'),
-      messageBox: document.getElementById('messageBox'),
+      copyOutputBtn: document.getElementById('copyOutputBtn'),
+      clearOutputBtn: document.getElementById('clearOutputBtn'),
+      messageBox: document.getElementById('messageBox')
+    };
 
-      genreAddName: document.getElementById('genreAddName'),
-      genreAddSlug: document.getElementById('genreAddSlug'),
-      btnGenreAdd: document.getElementById('btnGenreAdd'),
-
-      genreEditOldSlug: document.getElementById('genreEditOldSlug'),
-      genreEditNewSlug: document.getElementById('genreEditNewSlug'),
-      genreEditNewName: document.getElementById('genreEditNewName'),
-      btnGenreEdit: document.getElementById('btnGenreEdit'),
-
-      genreDeleteSlug: document.getElementById('genreDeleteSlug'),
-      genreDeleteMode: document.getElementById('genreDeleteMode'),
-      btnGenreDelete: document.getElementById('btnGenreDelete'),
-
-      trackAddGenreSlug: document.getElementById('trackAddGenreSlug'),
-      trackAddTitle: document.getElementById('trackAddTitle'),
-      trackAddArtist: document.getElementById('trackAddArtist'),
-      trackAddSortOrder: document.getElementById('trackAddSortOrder'),
-      trackAddYoutubeUrl: document.getElementById('trackAddYoutubeUrl'),
-      trackAddVideoId: document.getElementById('trackAddVideoId'),
-      btnTrackAdd: document.getElementById('btnTrackAdd'),
-
-      trackEditLookupType: document.getElementById('trackEditLookupType'),
-      trackEditLookupValue: document.getElementById('trackEditLookupValue'),
-      trackEditTitle: document.getElementById('trackEditTitle'),
-      trackEditArtist: document.getElementById('trackEditArtist'),
-      trackEditGenreSlug: document.getElementById('trackEditGenreSlug'),
-      trackEditSortOrder: document.getElementById('trackEditSortOrder'),
-      trackEditYoutubeUrl: document.getElementById('trackEditYoutubeUrl'),
-      trackEditVideoId: document.getElementById('trackEditVideoId'),
-      btnTrackEdit: document.getElementById('btnTrackEdit'),
-
-      trackDeleteType: document.getElementById('trackDeleteType'),
-      trackDeleteValue: document.getElementById('trackDeleteValue'),
-      btnTrackDelete: document.getElementById('btnTrackDelete')
+    const state = {
+      theme: window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light',
+      genreSlugManual: false
     };
 
     document.addEventListener('DOMContentLoaded', () => {
       applyTheme(state.theme);
       bindEvents();
+      addSongItem();
     });
 
     function bindEvents() {
-      refs.themeToggle.addEventListener('click', toggleTheme);
-
-      refs.tabs.forEach((tab) => {
-        tab.addEventListener('click', () => switchTab(tab.dataset.tab));
+      refs.themeToggle.addEventListener('click', () => {
+        state.theme = state.theme === 'dark' ? 'light' : 'dark';
+        applyTheme(state.theme);
       });
 
-      refs.copySqlBtn.addEventListener('click', copySqlOutput);
-      refs.clearSqlBtn.addEventListener('click', () => {
+      refs.genreName.addEventListener('input', () => {
+        syncClearButton(refs.genreName);
+        if (!state.genreSlugManual) {
+          refs.genreSlug.value = slugify(refs.genreName.value);
+          syncClearButton(refs.genreSlug);
+        }
+      });
+
+      refs.genreSlug.addEventListener('input', () => {
+        state.genreSlugManual = refs.genreSlug.value.trim().length > 0;
+        syncClearButton(refs.genreSlug);
+      });
+
+      refs.addSongBtn.addEventListener('click', () => addSongItem());
+      refs.clearAllInputsBtn.addEventListener('click', clearAllInputs);
+      refs.generateSqlBtn.addEventListener('click', generateSql);
+      refs.copyOutputBtn.addEventListener('click', copyOutput);
+      refs.clearOutputBtn.addEventListener('click', () => {
         refs.sqlOutput.value = '';
-        setMessage('Output dibersihkan.', 'success');
+        setMessage('Output berhasil dibersihkan.', 'success');
       });
 
-      refs.genreAddName.addEventListener('input', () => {
-        if (!refs.genreAddSlug.dataset.manual) {
-          refs.genreAddSlug.value = slugify(refs.genreAddName.value);
-        }
+      document.querySelectorAll('[data-clear-target]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const target = document.getElementById(btn.dataset.clearTarget);
+          if (!target) return;
+          target.value = '';
+          if (target === refs.genreSlug) state.genreSlugManual = false;
+          syncClearButton(target);
+          target.focus();
+        });
       });
-
-      refs.genreAddSlug.addEventListener('input', () => {
-        refs.genreAddSlug.dataset.manual = refs.genreAddSlug.value.trim() ? '1' : '';
-      });
-
-      refs.trackAddYoutubeUrl.addEventListener('input', () => {
-        const id = extractYouTubeVideoId(refs.trackAddYoutubeUrl.value);
-        if (id && !refs.trackAddVideoId.dataset.manual) {
-          refs.trackAddVideoId.value = id;
-        }
-      });
-
-      refs.trackAddVideoId.addEventListener('input', () => {
-        refs.trackAddVideoId.dataset.manual = refs.trackAddVideoId.value.trim() ? '1' : '';
-      });
-
-      refs.trackEditYoutubeUrl.addEventListener('input', () => {
-        const id = extractYouTubeVideoId(refs.trackEditYoutubeUrl.value);
-        if (id && !refs.trackEditVideoId.dataset.manual) {
-          refs.trackEditVideoId.value = id;
-        }
-      });
-
-      refs.trackEditVideoId.addEventListener('input', () => {
-        refs.trackEditVideoId.dataset.manual = refs.trackEditVideoId.value.trim() ? '1' : '';
-      });
-
-      refs.btnGenreAdd.addEventListener('click', generateAddGenreSql);
-      refs.btnGenreEdit.addEventListener('click', generateEditGenreSql);
-      refs.btnGenreDelete.addEventListener('click', generateDeleteGenreSql);
-      refs.btnTrackAdd.addEventListener('click', generateAddTrackSql);
-      refs.btnTrackEdit.addEventListener('click', generateEditTrackSql);
-      refs.btnTrackDelete.addEventListener('click', generateDeleteTrackSql);
-    }
-
-    function switchTab(tabName) {
-      refs.tabs.forEach((tab) => {
-        tab.classList.toggle('active', tab.dataset.tab === tabName);
-      });
-
-      refs.sections.forEach((section) => {
-        section.classList.toggle('active', section.id === `section-${tabName}`);
-      });
-
-      setMessage('', '');
-    }
-
-    function toggleTheme() {
-      state.theme = state.theme === 'dark' ? 'light' : 'dark';
-      applyTheme(state.theme);
     }
 
     function applyTheme(theme) {
@@ -996,102 +778,202 @@
       refs.themeToggle.textContent = theme === 'dark' ? '☀' : '☾';
     }
 
-    function generateAddGenreSql() {
-      const name = refs.genreAddName.value.trim();
-      const slug = (refs.genreAddSlug.value.trim() || slugify(name)).trim();
+    function addSongItem(data = {}) {
+      const fragment = refs.songItemTemplate.content.cloneNode(true);
+      const item = fragment.querySelector('.song-item');
+      const titleLabel = fragment.querySelector('.song-title-label');
+      const titleInput = fragment.querySelector('.song-track-title');
+      const artistInput = fragment.querySelector('.song-track-artist');
+      const urlInput = fragment.querySelector('.song-track-url');
+      const videoIdInput = fragment.querySelector('.song-track-video-id');
+      const orderInput = fragment.querySelector('.song-track-order');
+      const removeBtn = fragment.querySelector('.song-remove-btn');
+      const duplicateBtn = fragment.querySelector('.song-duplicate-btn');
 
-      if (!name) {
+      titleInput.value = data.title || '';
+      artistInput.value = data.artist || '';
+      urlInput.value = data.youtubeUrl || '';
+      videoIdInput.value = data.youtubeVideoId || '';
+      orderInput.value = data.sortOrder ?? getNextSortOrder();
+
+      [titleInput, artistInput, urlInput, videoIdInput, orderInput].forEach(syncClearButton);
+
+      urlInput.addEventListener('input', () => {
+        syncClearButton(urlInput);
+        const extracted = extractYouTubeVideoId(urlInput.value);
+        if (extracted && !videoIdInput.dataset.manual) {
+          videoIdInput.value = extracted;
+          syncClearButton(videoIdInput);
+        }
+      });
+
+      videoIdInput.addEventListener('input', () => {
+        videoIdInput.dataset.manual = videoIdInput.value.trim() ? '1' : '';
+        syncClearButton(videoIdInput);
+      });
+
+      [titleInput, artistInput, orderInput].forEach((input) => {
+        input.addEventListener('input', () => syncClearButton(input));
+      });
+
+      fragment.querySelectorAll('[data-song-clear]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const map = {
+            title: titleInput,
+            artist: artistInput,
+            url: urlInput,
+            videoId: videoIdInput,
+            order: orderInput
+          };
+          const target = map[btn.dataset.songClear];
+          if (!target) return;
+          target.value = btn.dataset.songClear === 'order' ? '0' : '';
+          if (target === videoIdInput) target.dataset.manual = '';
+          syncClearButton(target);
+          target.focus();
+        });
+      });
+
+      duplicateBtn.addEventListener('click', () => {
+        addSongItem({
+          title: titleInput.value,
+          artist: artistInput.value,
+          youtubeUrl: urlInput.value,
+          youtubeVideoId: videoIdInput.value,
+          sortOrder: Number(orderInput.value || 0) + 1
+        });
+      });
+
+      removeBtn.addEventListener('click', () => {
+        const items = refs.songBuilder.querySelectorAll('.song-item');
+        if (items.length <= 1) {
+          clearSongItem(item);
+          renumberSongItems();
+          return;
+        }
+        item.remove();
+        renumberSongItems();
+        setMessage('Baris lagu dihapus.', 'success');
+      });
+
+      refs.songBuilder.appendChild(fragment);
+      renumberSongItems();
+    }
+
+    function clearSongItem(item) {
+      item.querySelector('.song-track-title').value = '';
+      item.querySelector('.song-track-artist').value = '';
+      item.querySelector('.song-track-url').value = '';
+      const videoIdInput = item.querySelector('.song-track-video-id');
+      videoIdInput.value = '';
+      videoIdInput.dataset.manual = '';
+      item.querySelector('.song-track-order').value = '0';
+      item.querySelectorAll('input').forEach(syncClearButton);
+    }
+
+    function renumberSongItems() {
+      refs.songBuilder.querySelectorAll('.song-item').forEach((item, index) => {
+        item.querySelector('.song-title-label').textContent = `Lagu ${index + 1}`;
+      });
+    }
+
+    function getNextSortOrder() {
+      const inputs = Array.from(refs.songBuilder.querySelectorAll('.song-track-order'));
+      if (!inputs.length) return 1;
+      const max = Math.max(...inputs.map((input) => Number(input.value || 0)));
+      return Number.isFinite(max) ? max + 1 : 1;
+    }
+
+    function syncClearButton(input) {
+      const wrap = input.closest('.input-wrap');
+      if (!wrap) return;
+      wrap.classList.toggle('has-value', String(input.value).length > 0);
+    }
+
+    function clearAllInputs() {
+      refs.genreName.value = '';
+      refs.genreSlug.value = '';
+      state.genreSlugManual = false;
+      syncClearButton(refs.genreName);
+      syncClearButton(refs.genreSlug);
+
+      refs.songBuilder.innerHTML = '';
+      addSongItem();
+
+      setMessage('Semua input berhasil dibersihkan.', 'success');
+    }
+
+    function generateSql() {
+      const genreName = refs.genreName.value.trim();
+      const genreSlug = (refs.genreSlug.value.trim() || slugify(genreName)).trim();
+
+      if (!genreName) {
         return setMessage('Nama genre wajib diisi.', 'error');
       }
 
-      if (!slug) {
+      if (!genreSlug) {
         return setMessage('Slug genre tidak valid.', 'error');
       }
 
-      const sql = [
-        "-- Tambah genre",
+      const songItems = Array.from(refs.songBuilder.querySelectorAll('.song-item'));
+      const songs = [];
+
+      for (const item of songItems) {
+        const title = item.querySelector('.song-track-title').value.trim();
+        const artist = item.querySelector('.song-track-artist').value.trim();
+        const youtubeUrl = item.querySelector('.song-track-url').value.trim();
+        const videoIdInput = item.querySelector('.song-track-video-id').value.trim();
+        const videoId = videoIdInput || extractYouTubeVideoId(youtubeUrl);
+        const sortOrder = sanitizeNumber(item.querySelector('.song-track-order').value, 0);
+
+        if (!title && !artist && !youtubeUrl && !videoIdInput) {
+          continue;
+        }
+
+        if (!title) {
+          return setMessage('Setiap lagu yang diisi wajib punya judul.', 'error');
+        }
+
+        if (!youtubeUrl) {
+          return setMessage(`Lagu "${title}" wajib punya YouTube URL.`, 'error');
+        }
+
+        if (!videoId) {
+          return setMessage(`YouTube video ID untuk "${title}" tidak ditemukan. Isi manual jika perlu.`, 'error');
+        }
+
+        songs.push({
+          title,
+          artist,
+          youtubeUrl,
+          youtubeVideoId: videoId,
+          sortOrder
+        });
+      }
+
+      if (!songs.length) {
+        return setMessage('Isi minimal satu lagu.', 'error');
+      }
+
+      const genreSql = [
+        "-- Tambah genre jika belum ada",
         "INSERT OR IGNORE INTO genres (name, slug)",
-        `VALUES ('${sqlEscape(name)}', '${sqlEscape(slug)}');`
+        `VALUES ('${sqlEscape(genreName)}', '${sqlEscape(genreSlug)}');`
       ].join('\n');
 
-      setOutput(sql);
-      setMessage('SQL tambah genre berhasil dibuat.', 'success');
-    }
+      const songValues = songs.map((song) => [
+        "(",
+        `  (SELECT id FROM genres WHERE slug = '${sqlEscape(genreSlug)}'),`,
+        `  '${sqlEscape(song.title)}',`,
+        `  ${song.artist ? `'${sqlEscape(song.artist)}'` : 'NULL'},`,
+        `  '${sqlEscape(song.youtubeUrl)}',`,
+        `  '${sqlEscape(song.youtubeVideoId)}',`,
+        `  ${song.sortOrder}`,
+        ")"
+      ].join('\n')).join(',\n');
 
-    function generateEditGenreSql() {
-      const oldSlug = refs.genreEditOldSlug.value.trim();
-      const newName = refs.genreEditNewName.value.trim();
-      const newSlug = refs.genreEditNewSlug.value.trim();
-
-      if (!oldSlug) {
-        return setMessage('Slug genre lama wajib diisi.', 'error');
-      }
-
-      const updates = [];
-      if (newName) updates.push(`name = '${sqlEscape(newName)}'`);
-      if (newSlug) updates.push(`slug = '${sqlEscape(newSlug)}'`);
-
-      if (!updates.length) {
-        return setMessage('Isi minimal satu field perubahan.', 'error');
-      }
-
-      const sql = [
-        "-- Edit genre",
-        "UPDATE genres",
-        `SET ${updates.join(', ')}`,
-        `WHERE slug = '${sqlEscape(oldSlug)}';`
-      ].join('\n');
-
-      setOutput(sql);
-      setMessage('SQL edit genre berhasil dibuat.', 'success');
-    }
-
-    function generateDeleteGenreSql() {
-      const slug = refs.genreDeleteSlug.value.trim();
-      const mode = refs.genreDeleteMode.value;
-
-      if (!slug) {
-        return setMessage('Slug genre wajib diisi.', 'error');
-      }
-
-      let sql = '';
-
-      if (mode === 'with-tracks') {
-        sql = [
-          "-- Hapus semua lagu dalam genre lalu hapus genre",
-          "DELETE FROM tracks",
-          `WHERE genre_id = (SELECT id FROM genres WHERE slug = '${sqlEscape(slug)}');`,
-          "",
-          "DELETE FROM genres",
-          `WHERE slug = '${sqlEscape(slug)}';`
-        ].join('\n');
-      } else {
-        sql = [
-          "-- Hapus genre saja",
-          "DELETE FROM genres",
-          `WHERE slug = '${sqlEscape(slug)}';`
-        ].join('\n');
-      }
-
-      setOutput(sql);
-      setMessage('SQL hapus genre berhasil dibuat.', 'success');
-    }
-
-    function generateAddTrackSql() {
-      const genreSlug = refs.trackAddGenreSlug.value.trim();
-      const title = refs.trackAddTitle.value.trim();
-      const artist = refs.trackAddArtist.value.trim();
-      const youtubeUrl = refs.trackAddYoutubeUrl.value.trim();
-      const videoId = (refs.trackAddVideoId.value.trim() || extractYouTubeVideoId(youtubeUrl)).trim();
-      const sortOrder = sanitizeNumber(refs.trackAddSortOrder.value, 0);
-
-      if (!genreSlug) return setMessage('Slug genre wajib diisi.', 'error');
-      if (!title) return setMessage('Judul lagu wajib diisi.', 'error');
-      if (!youtubeUrl) return setMessage('YouTube URL wajib diisi.', 'error');
-      if (!videoId) return setMessage('YouTube video ID tidak ditemukan. Isi manual jika perlu.', 'error');
-
-      const sql = [
-        "-- Tambah lagu",
+      const tracksSql = [
+        "-- Tambah satu atau beberapa lagu dalam genre yang sama",
         "INSERT INTO tracks (",
         "  genre_id,",
         "  title,",
@@ -1099,102 +981,25 @@
         "  youtube_url,",
         "  youtube_video_id,",
         "  sort_order",
-        ") VALUES (",
-        `  (SELECT id FROM genres WHERE slug = '${sqlEscape(genreSlug)}'),`,
-        `  '${sqlEscape(title)}',`,
-        `  ${artist ? `'${sqlEscape(artist)}'` : 'NULL'},`,
-        `  '${sqlEscape(youtubeUrl)}',`,
-        `  '${sqlEscape(videoId)}',`,
-        `  ${sortOrder}`,
-        ");"
+        ") VALUES",
+        songValues + ";"
       ].join('\n');
 
-      setOutput(sql);
-      setMessage('SQL tambah lagu berhasil dibuat.', 'success');
+      refs.sqlOutput.value = `${genreSql}\n\n${tracksSql}`;
+      setMessage(`SQL berhasil dibuat untuk 1 genre dan ${songs.length} lagu.`, 'success');
     }
 
-    function generateEditTrackSql() {
-      const lookupType = refs.trackEditLookupType.value;
-      const lookupValue = refs.trackEditLookupValue.value.trim();
-
-      if (!lookupValue) {
-        return setMessage('Nilai pencarian lagu wajib diisi.', 'error');
-      }
-
-      const title = refs.trackEditTitle.value.trim();
-      const artist = refs.trackEditArtist.value.trim();
-      const genreSlug = refs.trackEditGenreSlug.value.trim();
-      const sortOrderRaw = refs.trackEditSortOrder.value.trim();
-      const youtubeUrl = refs.trackEditYoutubeUrl.value.trim();
-      const videoId = (refs.trackEditVideoId.value.trim() || extractYouTubeVideoId(youtubeUrl)).trim();
-
-      const updates = [];
-
-      if (title) updates.push(`title = '${sqlEscape(title)}'`);
-      if (artist) updates.push(`artist = '${sqlEscape(artist)}'`);
-      if (genreSlug) updates.push(`genre_id = (SELECT id FROM genres WHERE slug = '${sqlEscape(genreSlug)}')`);
-      if (sortOrderRaw !== '') updates.push(`sort_order = ${sanitizeNumber(sortOrderRaw, 0)}`);
-      if (youtubeUrl) updates.push(`youtube_url = '${sqlEscape(youtubeUrl)}'`);
-      if (videoId) updates.push(`youtube_video_id = '${sqlEscape(videoId)}'`);
-
-      if (!updates.length) {
-        return setMessage('Isi minimal satu field yang ingin diubah.', 'error');
-      }
-
-      const whereClause = lookupType === 'id'
-        ? `id = ${sanitizeNumber(lookupValue, 0)}`
-        : `youtube_video_id = '${sqlEscape(lookupValue)}'`;
-
-      const sql = [
-        "-- Edit lagu",
-        "UPDATE tracks",
-        `SET ${updates.join(',\n    ')}`,
-        `WHERE ${whereClause};`
-      ].join('\n');
-
-      setOutput(sql);
-      setMessage('SQL edit lagu berhasil dibuat.', 'success');
-    }
-
-    function generateDeleteTrackSql() {
-      const type = refs.trackDeleteType.value;
-      const value = refs.trackDeleteValue.value.trim();
-
-      if (!value) {
-        return setMessage('Nilai penghapusan lagu wajib diisi.', 'error');
-      }
-
-      const whereClause = type === 'id'
-        ? `id = ${sanitizeNumber(value, 0)}`
-        : `youtube_video_id = '${sqlEscape(value)}'`;
-
-      const sql = [
-        "-- Hapus lagu",
-        "DELETE FROM tracks",
-        `WHERE ${whereClause};`
-      ].join('\n');
-
-      setOutput(sql);
-      setMessage('SQL hapus lagu berhasil dibuat.', 'success');
-    }
-
-    function setOutput(sql) {
-      refs.sqlOutput.value = sql;
-      refs.sqlOutput.focus();
-      refs.sqlOutput.setSelectionRange(0, 0);
-    }
-
-    async function copySqlOutput() {
+    async function copyOutput() {
       const value = refs.sqlOutput.value.trim();
       if (!value) {
-        return setMessage('Belum ada SQL untuk di-copy.', 'error');
+        return setMessage('Output masih kosong.', 'error');
       }
 
       try {
         await navigator.clipboard.writeText(value);
         setMessage('SQL berhasil di-copy.', 'success');
       } catch {
-        setMessage('Gagal copy otomatis. Copy manual dari panel output.', 'error');
+        setMessage('Gagal copy otomatis. Copy manual dari area output.', 'error');
       }
     }
 
