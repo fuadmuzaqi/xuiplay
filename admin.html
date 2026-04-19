@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Music Station</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&f[]=boska@400,500,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/styles.css" />
+</head>
+<body class="admin-body">
+  <a class="skip-link" href="#admin-main">Lewati ke konten</a>
+
+  <header class="topbar">
+    <div class="brand-wrap">
+      <img src="./assets/logo.svg" alt="Music Station logo" class="brand-logo" width="44" height="44" />
+      <div>
+        <p class="eyebrow">Admin panel</p>
+        <h1 class="brand-title">Music Station Admin</h1>
+      </div>
+    </div>
+
+    <div class="topbar-actions">
+      <button class="icon-btn" id="themeToggle" type="button" aria-label="Ganti tema">☀</button>
+      <a class="ghost-link" href="./index.html">Player</a>
+    </div>
+  </header>
+
+  <main id="admin-main" class="admin-main">
+    <section id="loginCard" class="surface-card auth-card">
+      <p class="eyebrow">Secure access</p>
+      <h2>Masuk admin</h2>
+      <p class="muted-text">Masukkan access code yang cocok dengan environment variable di Vercel.</p>
+
+      <form id="loginForm" class="stack-form">
+        <label>
+          <span>Access code</span>
+          <input id="accessCode" name="accessCode" type="password" placeholder="Masukkan access code" required />
+        </label>
+        <button class="primary-btn" type="submit">Masuk</button>
+      </form>
+      <p id="loginMessage" class="form-message" aria-live="polite"></p>
+    </section>
+
+    <section id="dashboard" class="dashboard-grid" hidden>
+      <div class="surface-card">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Genre</p>
+            <h2>Buat folder genre</h2>
+          </div>
+          <button id="logoutBtn" class="secondary-btn" type="button">Logout</button>
+        </div>
+
+        <form id="genreForm" class="stack-form">
+          <label>
+            <span>Nama genre</span>
+            <input name="name" type="text" placeholder="Contoh: Lofi Chill" required />
+          </label>
+          <button class="primary-btn" type="submit">Tambah genre</button>
+        </form>
+        <p id="genreMessage" class="form-message" aria-live="polite"></p>
+      </div>
+
+      <div class="surface-card">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Track</p>
+            <h2>Tambah music ke genre</h2>
+          </div>
+        </div>
+
+        <form id="trackForm" class="stack-form">
+          <label>
+            <span>Genre</span>
+            <select id="genreSelect" name="genreId" required></select>
+          </label>
+
+          <label>
+            <span>Judul lagu</span>
+            <input name="title" type="text" placeholder="Judul track" required />
+          </label>
+
+          <label>
+            <span>Artist</span>
+            <input name="artist" type="text" placeholder="Nama artist / channel" />
+          </label>
+
+          <label>
+            <span>Link YouTube</span>
+            <input name="youtubeUrl" type="url" placeholder="https://www.youtube.com/watch?v=..." required />
+          </label>
+
+          <label>
+            <span>Cover URL (opsional)</span>
+            <input name="coverUrl" type="url" placeholder="https://..." />
+          </label>
+
+          <div class="two-col">
+            <label>
+              <span>Accent color</span>
+              <input name="accentColor" type="color" value="#01696f" />
+            </label>
+
+            <label>
+              <span>Urutan</span>
+              <input name="sortOrder" type="number" value="0" min="0" />
+            </label>
+          </div>
+
+          <button class="primary-btn" type="submit">Tambah track</button>
+        </form>
+        <p id="trackMessage" class="form-message" aria-live="polite"></p>
+      </div>
+
+      <div class="surface-card dashboard-span">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Library</p>
+            <h2>Data genre dan track</h2>
+          </div>
+        </div>
+        <div id="libraryPreview" class="library-preview"></div>
+      </div>
+    </section>
+  </main>
+
+  <script src="./js/admin.js" defer></script>
+</body>
+</html>
