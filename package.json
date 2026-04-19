@@ -1,0 +1,18 @@
+{
+  "name": "youtube-music-station",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Static HTML music player with admin panel, YouTube audio controls, Vercel Functions, and Turso database.",
+  "scripts": {
+    "dev": "vercel dev",
+    "start": "vercel dev",
+    "deploy": "vercel"
+  },
+  "dependencies": {
+    "@libsql/client": "^0.15.6"
+  },
+  "devDependencies": {
+    "vercel": "^41.7.3"
+  }
+}
