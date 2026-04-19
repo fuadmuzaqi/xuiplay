@@ -1,0 +1,60 @@
+import { requireAdmin } from "../_lib/auth.js";
+import { db } from "../_lib/db.js";
+import { getJsonBody, slugify } from "../_lib/utils.js";
+
+export default async function handler(req, res) {
+  if (!requireAdmin(req, res)) return;
+
+  try {
+    if (req.method === "GET") {
+      const result = await db.execute(`
+        SELECT id, name, slug, created_at
+        FROM genres
+        ORDER BY name ASC
+      `);
+
+      res.status(200).json({
+        genres: result.rows.map((row) => ({
+          id: Number(row.id),
+          name: row.name,
+          slug: row.slug,
+          createdAt: row.created_at
+        }))
+      });
+      return;
+    }
+
+    if (req.method === "POST") {
+      const body = getJsonBody(req);
+      const name = String(body.name || "").trim();
+
+      if (!name) {
+        res.status(400).json({ error: "Nama genre wajib diisi." });
+        return;
+      }
+
+      const slug = slugify(name);
+      if (!slug) {
+        res.status(400).json({ error: "Slug genre tidak valid." });
+        return;
+      }
+
+      await db.execute({
+        sql: `INSERT INTO genres (name, slug) VALUES (?, ?)`,
+        args: [name, slug]
+      });
+
+      res.status(201).json({ ok: true });
+      return;
+    }
+
+    res.status(405).json({ error: "Method not allowed." });
+  } catch (error) {
+    if (String(error.message || "").toLowerCase().includes("unique")) {
+      res.status(409).json({ error: "Genre sudah ada." });
+      return;
+    }
+
+    res.status(500).json({ error: "Gagal memproses genre." });
+  }
+}
