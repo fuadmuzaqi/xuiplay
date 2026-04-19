@@ -1,54 +1,62 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Music Station Pro</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Music Station | Minimalist Player</title>
   <link rel="preconnect" href="https://api.fontshare.com">
   <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&f[]=boska@400,500,700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/styles.css" />
+  <link rel="stylesheet" href="./css/styles.css">
 </head>
 <body>
   <header class="topbar">
-    <h1 class="brand-title">Music<span>Station</span></h1>
-    <button class="icon-btn" id="themeToggle" type="button" aria-label="Ganti tema">☾</button>
+    <div class="brand">
+      <div class="logo">♪</div>
+      <h1>Music<span>Station</span></h1>
+    </div>
+    <button id="themeToggle" class="icon-btn" aria-label="Toggle Theme">☾</button>
   </header>
 
-  <main class="main-shell">
+  <main class="container">
     <section class="player-card">
-      <div class="now-block">
-        <h2 id="nowTitle">Pilih Lagu</h2>
-        <p id="nowArtist" class="muted">Siap memutar musik</p>
+      <div class="track-display">
+        <h2 id="nowTitle">Pilih lagu...</h2>
+        <p id="nowArtist" class="muted">Siap memutar musik favoritmu</p>
       </div>
 
-      <div class="progress-container">
-        <span id="currentTime">0:00</span>
-        <input type="range" id="timeBar" value="0" step="1" min="0" max="100">
-        <span id="durationTime">0:00</span>
+      <div class="progress-area">
+        <div class="time-labels">
+          <span id="currentTime">0:00</span>
+          <span id="durationTime">0:00</span>
+        </div>
+        <input type="range" id="timeBar" value="0" min="0" max="100" step="1">
       </div>
 
-      <div class="transport">
-        <button id="prevBtn" class="transport-btn">⏮</button>
+      <div class="controls">
+        <button id="prevBtn" class="control-btn" title="Previous">⏮</button>
         <button id="playPauseBtn" class="play-btn">▶</button>
-        <button id="nextBtn" class="transport-btn">⏭</button>
+        <button id="nextBtn" class="control-btn" title="Next">⏭</button>
       </div>
     </section>
 
     <section class="playlist-card">
       <nav class="genre-nav">
-        <div id="genreTabs" class="genre-tabs"></div>
+        <div id="genreTabs" class="genre-scroll">
+          </div>
       </nav>
-      
-      <div class="playlist-header">
-        <h3 id="genreHeading">Playlist</h3>
-        <span id="trackCount" class="muted-tag">0 tracks</span>
+
+      <div class="playlist-meta">
+        <h3 id="genreHeading">Daftar Lagu</h3>
+        <span id="trackCount" class="badge">0 Track</span>
       </div>
-      
-      <div id="playlistContainer" class="playlist-list"></div>
+
+      <div id="playlistContainer" class="playlist-items">
+        </div>
     </section>
   </main>
 
-  <div id="youtube-player" class="yt-hidden"></div>
-  <script src="./js/app.js" defer></script>
+  <div id="youtube-player" class="hidden-player"></div>
+
+  <script src="./js/app.js"></script>
 </body>
 </html>
