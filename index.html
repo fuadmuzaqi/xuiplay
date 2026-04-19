@@ -8,7 +8,6 @@
   <link rel="manifest" href="./manifest.json">
   <meta name="theme-color" content="#0a0a0a">
   <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
   <link rel="preconnect" href="https://api.fontshare.com">
   <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&f[]=boska@400,500,700&display=swap" rel="stylesheet">
@@ -21,16 +20,13 @@
       <h1>Music<span>Station</span></h1>
     </div>
     <div class="topbar-actions">
-      <button class="icon-btn" id="installBtn" style="display: none;" title="Instal Aplikasi">⬇</button>
-      
+      <button class="icon-btn" id="installBtn" style="display: none;" title="Instal">⬇</button>
       <button class="icon-btn" id="clearCacheBtn" title="Hapus Cache">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2m-6 5v6m4-6v6"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
       </button>
-
       <button class="icon-btn" id="refreshBtn" title="Refresh">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
       </button>
-
       <button class="icon-btn" id="themeToggle">☀</button>
     </div>
   </header>
@@ -64,14 +60,20 @@
     </section>
 
     <section class="playlist-card">
-      <nav class="genre-container">
+      <header class="section-header">
+        <div class="header-info">
+          <svg class="folder-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
+          <h3 id="genreHeading">Folders</h3>
+        </div>
+        <span id="trackCount" class="badge">0 track</span>
+      </header>
+
+      <nav class="genre-nav">
         <div id="genreTabs" class="genre-tabs"></div>
       </nav>
-      <div class="playlist-header">
-        <h3 id="genreHeading">Playlist</h3>
-        <span id="trackCount" class="badge">0 track</span>
-      </div>
-      <div id="playlistContainer" class="playlist-list"></div>
+
+      <div id="playlistContainer" class="playlist-list">
+        </div>
     </section>
   </main>
 
