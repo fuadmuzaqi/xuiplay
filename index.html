@@ -1,9 +1,15 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" data-theme="dark">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Music Station | Minimalist Player</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Music Station</title>
+  
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#0a0a0a">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
   <link rel="preconnect" href="https://api.fontshare.com">
   <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&f[]=boska@400,500,700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./css/styles.css">
@@ -14,49 +20,62 @@
       <div class="logo">♪</div>
       <h1>Music<span>Station</span></h1>
     </div>
-    <button id="themeToggle" class="icon-btn" aria-label="Toggle Theme">☾</button>
+    <div class="topbar-actions">
+      <button class="icon-btn" id="installBtn" style="display: none;" title="Instal Aplikasi">⬇</button>
+      
+      <button class="icon-btn" id="clearCacheBtn" title="Hapus Cache">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2m-6 5v6m4-6v6"/></svg>
+      </button>
+
+      <button class="icon-btn" id="refreshBtn" title="Refresh">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+      </button>
+
+      <button class="icon-btn" id="themeToggle">☀</button>
+    </div>
   </header>
 
-  <main class="container">
+  <main class="main-shell">
     <section class="player-card">
-      <div class="track-display">
-        <h2 id="nowTitle">Pilih lagu...</h2>
-        <p id="nowArtist" class="muted">Siap memutar musik favoritmu</p>
+      <div class="now-playing">
+        <h2 id="nowTitle">Pilih Lagu</h2>
+        <p id="nowArtist" class="muted">Siap memutar musik</p>
       </div>
 
-      <div class="progress-area">
+      <div class="scrubber-container">
         <div class="time-labels">
           <span id="currentTime">0:00</span>
           <span id="durationTime">0:00</span>
         </div>
-        <input type="range" id="timeBar" value="0" min="0" max="100" step="1">
+        <input type="range" id="timeBar" value="0" min="0" max="100" step="0.1">
       </div>
 
       <div class="controls">
-        <button id="prevBtn" class="control-btn" title="Previous">⏮</button>
-        <button id="playPauseBtn" class="play-btn">▶</button>
-        <button id="nextBtn" class="control-btn" title="Next">⏭</button>
+        <button id="prevBtn" class="control-btn">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+        </button>
+        <button id="playPauseBtn" class="play-btn">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+        </button>
+        <button id="nextBtn" class="control-btn">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6h2v12h-2z"/></svg>
+        </button>
       </div>
     </section>
 
     <section class="playlist-card">
-      <nav class="genre-nav">
-        <div id="genreTabs" class="genre-scroll">
-          </div>
+      <nav class="genre-container">
+        <div id="genreTabs" class="genre-tabs"></div>
       </nav>
-
-      <div class="playlist-meta">
-        <h3 id="genreHeading">Daftar Lagu</h3>
-        <span id="trackCount" class="badge">0 Track</span>
+      <div class="playlist-header">
+        <h3 id="genreHeading">Playlist</h3>
+        <span id="trackCount" class="badge">0 track</span>
       </div>
-
-      <div id="playlistContainer" class="playlist-items">
-        </div>
+      <div id="playlistContainer" class="playlist-list"></div>
     </section>
   </main>
 
-  <div id="youtube-player" class="hidden-player"></div>
-
+  <div id="youtube-player" class="yt-hidden"></div>
   <script src="./js/app.js"></script>
 </body>
 </html>
