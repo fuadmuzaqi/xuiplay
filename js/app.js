@@ -8,9 +8,13 @@ const state = {
   isPlaying: false,
   youtubeApiPromise: null,
   pendingAutoplay: false,
-  eqValues: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
   theme: localStorage.getItem('theme') || "dark",
   progressInterval: null
+};
+
+const ICONS = {
+  play: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>`,
+  pause: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>`
 };
 
 const refs = {
@@ -26,24 +30,12 @@ const refs = {
   timeBar: document.getElementById("timeBar"),
   currentTime: document.getElementById("currentTime"),
   durationTime: document.getElementById("durationTime"),
-  eqPanel: document.getElementById("eqPanel"),
-  eqToggleBtn: document.getElementById("eqToggleBtn"),
-  eqSliders: document.getElementById("eqSliders"),
-  eqVisualizer: document.getElementById("eqVisualizer"),
   themeToggle: document.getElementById("themeToggle")
-};
-
-const EQ_FREQUENCIES = ["32", "64", "125", "250", "500", "1k", "2k", "4k", "8k", "16k"];
-const EQ_PRESETS = {
-  flat: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-  warm: [2, 3, 2, 1, 0, -1, -1, 0, 1, 1],
-  club: [3, 2, 1, 0, -1, 1, 2, 3, 2, 1]
 };
 
 document.addEventListener("DOMContentLoaded", () => {
   applyTheme(state.theme);
   bindEvents();
-  renderEqSliders();
   loadLibrary();
 });
 
@@ -52,7 +44,6 @@ function bindEvents() {
   refs.prevBtn.addEventListener("click", playPrevious);
   refs.nextBtn.addEventListener("click", playNext);
 
-  // FIX SEEKING MOBILE: Gunakan 'change' untuk eksekusi, 'input' untuk feedback visual
   refs.timeBar.addEventListener("change", (e) => {
     if (state.player && state.playerReady) {
       state.player.seekTo(e.target.value, true);
@@ -63,34 +54,21 @@ function bindEvents() {
     refs.currentTime.textContent = formatTime(e.target.value);
   });
 
-  refs.eqToggleBtn.addEventListener("click", () => {
-    const expanded = refs.eqToggleBtn.getAttribute("aria-expanded") === "true";
-    refs.eqToggleBtn.setAttribute("aria-expanded", String(!expanded));
-    refs.eqPanel.hidden = expanded;
-  });
-
   refs.themeToggle.addEventListener("click", () => {
     state.theme = state.theme === "dark" ? "light" : "dark";
     applyTheme(state.theme);
     localStorage.setItem('theme', state.theme);
   });
-
-  document.querySelectorAll(".preset-btn").forEach((button) => {
-    button.addEventListener("click", () => applyEqPreset(button.dataset.preset));
-  });
 }
 
-// Logic: Timer Progress
 function startProgressTimer() {
   if (state.progressInterval) clearInterval(state.progressInterval);
   state.progressInterval = setInterval(() => {
     if (state.player && state.isPlaying) {
       const current = state.player.getCurrentTime();
       const duration = state.player.getDuration();
-      
       refs.timeBar.max = duration;
       refs.timeBar.value = current;
-      
       refs.currentTime.textContent = formatTime(current);
       refs.durationTime.textContent = formatTime(duration);
     }
@@ -141,16 +119,21 @@ function renderPlaylist() {
   refs.genreHeading.textContent = activeGenre?.name || "Genre";
   refs.trackCount.textContent = `${tracks.length} track`;
 
-  refs.playlistContainer.innerHTML = tracks.map((track, index) => `
-    <button class="track-row ${state.activeTrack?.id === track.id ? "active" : ""}" 
-            type="button" data-track-index="${index}">
-      <span class="track-info">
-        <span class="track-title">${track.title}</span>
-        <span class="track-artist">${track.artist || "Unknown artist"}</span>
-      </span>
-      <span>${state.activeTrack?.id === track.id && state.isPlaying ? "⏸" : "▶"}</span>
-    </button>
-  `).join("");
+  refs.playlistContainer.innerHTML = tracks.map((track, index) => {
+    const isActive = state.activeTrack?.id === track.id;
+    return `
+      <button class="track-row ${isActive ? "active" : ""}" 
+              type="button" data-track-index="${index}">
+        <span class="track-info">
+          <span class="track-title">${track.title}</span>
+          <span class="track-artist">${track.artist || "Unknown artist"}</span>
+        </span>
+        <span class="track-play-icon">
+          ${isActive && state.isPlaying ? ICONS.pause : ICONS.play}
+        </span>
+      </button>
+    `;
+  }).join("");
 
   refs.playlistContainer.querySelectorAll(".track-row").forEach((button) => {
     button.addEventListener("click", () => selectTrack(Number(button.dataset.trackIndex), true));
@@ -220,7 +203,7 @@ function createPlayer(videoId) {
       },
       onStateChange: (event) => {
         state.isPlaying = (event.data === window.YT.PlayerState.PLAYING);
-        refs.playPauseBtn.textContent = state.isPlaying ? "⏸" : "▶";
+        refs.playPauseBtn.innerHTML = state.isPlaying ? ICONS.pause : ICONS.play;
         if (state.isPlaying) startProgressTimer();
         else clearInterval(state.progressInterval);
         if (event.data === window.YT.PlayerState.ENDED) playNext();
@@ -228,28 +211,6 @@ function createPlayer(videoId) {
       }
     }
   });
-}
-
-function renderEqSliders() {
-  refs.eqSliders.innerHTML = EQ_FREQUENCIES.map((freq, index) => `
-    <div class="eq-band">
-      <input type="range" min="-6" max="6" value="${state.eqValues[index]}" step="1" data-band-index="${index}" />
-      <label>${freq}</label>
-    </div>
-  `).join("");
-  refs.eqSliders.querySelectorAll("input").forEach((input) => {
-    input.addEventListener("input", () => {
-      state.eqValues[Number(input.dataset.bandIndex)] = Number(input.value);
-    });
-  });
-}
-
-function applyEqPreset(name) {
-  state.eqValues = [...EQ_PRESETS[name]];
-  refs.eqSliders.querySelectorAll("input").forEach((input, index) => {
-    input.value = String(state.eqValues[index]);
-  });
-  document.querySelectorAll(".preset-btn").forEach((btn) => btn.classList.toggle("active", btn.dataset.preset === name));
 }
 
 function applyTheme(theme) {
