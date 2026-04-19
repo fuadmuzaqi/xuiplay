@@ -31,7 +31,7 @@ body {
   transition: background 0.3s ease;
 }
 
-/* Header & Actions */
+/* Header */
 .topbar { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; position: sticky; top: 0; background: var(--bg); z-index: 50; }
 .brand { display: flex; align-items: center; gap: 10px; }
 .logo { background: var(--primary); color: var(--bg); width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; font-weight: bold; }
@@ -54,7 +54,7 @@ body {
 .control-btn { background: none; border: none; width: 44px; height: 44px; color: var(--text); cursor: pointer; padding: 10px; opacity: 0.8; }
 .play-btn { width: 68px; height: 68px; border-radius: 50%; background: var(--primary); color: var(--bg); border: none; cursor: pointer; display: grid; place-items: center; padding: 18px; }
 
-/* Playlist & Folders (DIREVISI) */
+/* Playlist Section */
 .playlist-card { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); overflow: hidden; }
 
 .section-header { padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; }
@@ -68,29 +68,63 @@ body {
 .genre-tabs::-webkit-scrollbar { display: none; }
 
 .genre-tab { 
-  padding: 8px 16px; border-radius: 12px; border: 1px solid var(--border); 
+  padding: 10px 20px; border-radius: 14px; border: 1px solid var(--border); 
   background: var(--surface-2); color: var(--text-muted); 
-  white-space: nowrap; cursor: pointer; font-size: 0.85rem; font-weight: 600;
+  white-space: nowrap; cursor: pointer; font-size: 0.9rem; font-weight: 600;
   transition: all 0.2s ease;
 }
 .genre-tab.active { background: var(--primary); color: var(--bg); border-color: var(--primary); }
 
-/* Track Rows (DIREVISI) */
-.playlist-list { padding: 8px; }
-.track-row { 
-  display: grid; grid-template-columns: 40px 1fr 40px; align-items: center; 
-  width: 100%; padding: 10px; border-radius: 14px; border: none; 
-  background: transparent; color: var(--text); text-align: left; cursor: pointer;
-}
-.track-row:hover { background: var(--surface-2); }
-.track-row.active { background: rgba(255, 255, 255, 0.05); color: var(--primary); }
-.track-row.active .track-index { color: var(--primary); font-weight: bold; }
+/* Track Row - Perbaikan Truncation */
+.playlist-list { padding: 12px; display: flex; flex-direction: column; gap: 8px; }
 
-.track-index { font-size: 0.8rem; color: var(--text-muted); text-align: center; }
-.track-info { display: flex; flex-direction: column; overflow: hidden; }
-.track-title { font-weight: 600; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.track-artist { font-size: 0.8rem; color: var(--text-muted); }
-.track-icon-wrap { display: grid; place-items: center; width: 20px; height: 20px; margin: 0 auto; }
+.track-row { 
+  display: grid; 
+  grid-template-columns: 32px 1fr 32px; /* Layout tetap stabil */
+  align-items: center; 
+  gap: 12px;
+  width: 100%; 
+  padding: 12px; 
+  border-radius: 14px; 
+  border: none; 
+  background: transparent; 
+  color: var(--text); 
+  text-align: left; 
+  cursor: pointer;
+}
+
+.track-row:hover { background: var(--surface-2); }
+.track-row.active { background: rgba(255, 255, 255, 0.08); color: var(--primary); }
+
+.track-index { font-size: 0.85rem; color: var(--text-muted); text-align: center; }
+
+.track-info { 
+  display: flex; 
+  flex-direction: column; 
+  min-width: 0; /* KRUSIAL: Agar teks di dalamnya bisa dipotong dengan benar */
+}
+
+.track-title { 
+  font-weight: 600; 
+  font-size: 1rem; 
+  white-space: nowrap; 
+  overflow: hidden; 
+  text-overflow: ellipsis; /* Titik-titik hanya muncul di ujung kolom */
+  margin-bottom: 2px;
+}
+
+.track-artist { 
+  font-size: 0.85rem; 
+  color: var(--text-muted); 
+  white-space: nowrap; 
+  overflow: hidden; 
+  text-overflow: ellipsis;
+}
+
+.track-row.active .track-artist { color: rgba(255, 255, 255, 0.6); }
+
+.track-icon-wrap { display: grid; place-items: center; width: 24px; height: 24px; }
+.track-icon-wrap svg { width: 100%; height: 100%; }
 
 /* Icons & Helpers */
 .icon-btn { background: var(--surface-2); border: none; color: var(--text); cursor: pointer; width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center; padding: 9px; }
