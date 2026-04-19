@@ -21,6 +21,8 @@
   --border: rgba(0, 0, 0, 0.08);
 }
 
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
 body {
   margin: 0;
   background: var(--bg);
@@ -63,7 +65,7 @@ body {
 .now-playing h2 { font-family: var(--font-display); font-size: 2.2rem; margin: 0 0 8px; line-height: 1.1; }
 .muted { color: var(--text-muted); font-size: 0.95rem; }
 
-/* Time Bar Modern */
+/* Scrubber */
 .scrubber-container { margin: 32px 0; }
 .time-labels { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 8px; font-weight: 600; }
 
@@ -73,31 +75,21 @@ body {
   cursor: pointer;
   height: 6px;
   border-radius: 3px;
-  /* Fix Mobile Seek */
   touch-action: none; 
 }
 
 .controls { display: flex; align-items: center; justify-content: center; gap: 32px; }
-.control-btn { background: none; border: none; font-size: 1.8rem; color: var(--text); cursor: pointer; opacity: 0.7; }
-.play-btn { width: 72px; height: 72px; border-radius: 50%; background: var(--primary); color: var(--bg); border: none; font-size: 1.5rem; cursor: pointer; }
+.control-btn { background: none; border: none; width: 32px; height: 32px; color: var(--text); cursor: pointer; opacity: 0.7; padding: 0; }
+.play-btn { width: 72px; height: 72px; border-radius: 50%; background: var(--primary); color: var(--bg); border: none; cursor: pointer; display: grid; place-items: center; padding: 0; }
+.play-btn svg { width: 32px; height: 32px; }
+.control-btn svg { width: 100%; height: 100%; }
 
-/* EQ Panel */
-.eq-panel { margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border); text-align: left; }
-.eq-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-.preset-group { display: flex; gap: 8px; }
-.preset-btn { background: var(--surface-2); border: none; color: var(--text); padding: 6px 12px; border-radius: 100px; font-size: 0.8rem; cursor: pointer; }
-.preset-btn.active { background: var(--primary); color: var(--bg); }
-.eq-sliders { display: flex; justify-content: space-between; height: 120px; }
-.eq-band { display: flex; flex-direction: column; align-items: center; gap: 8px; }
-.eq-band input { writing-mode: vertical-lr; height: 80px; accent-color: var(--primary); width: 20px; }
-.eq-band label { font-size: 0.6rem; color: var(--text-muted); }
-
-/* Playlist Card */
+/* Playlist Section */
 .playlist-card { background: var(--surface); border-radius: var(--radius); padding: 24px; border: 1px solid var(--border); }
 .genre-container { margin-bottom: 24px; border-bottom: 1px solid var(--border); padding-bottom: 16px; }
 .genre-tabs { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; }
 .genre-tabs::-webkit-scrollbar { display: none; }
-.genre-tab { padding: 8px 18px; border-radius: 100px; border: 1px solid var(--border); background: none; color: var(--text-muted); white-space: nowrap; cursor: pointer; transition: 0.2s; }
+.genre-tab { padding: 8px 18px; border-radius: 100px; border: 1px solid var(--border); background: none; color: var(--text-muted); white-space: nowrap; cursor: pointer; font-size: 0.85rem; }
 .genre-tab.active { background: var(--text); color: var(--bg); border-color: var(--text); }
 
 .playlist-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
@@ -109,6 +101,7 @@ body {
 .track-info { display: flex; flex-direction: column; }
 .track-title { font-weight: 600; font-size: 1rem; }
 .track-artist { font-size: 0.85rem; opacity: 0.7; }
+.track-play-icon { width: 18px; height: 18px; }
 
 .yt-hidden { position: fixed; top: -500px; opacity: 0; }
-.icon-btn { background: none; border: none; color: var(--text); cursor: pointer; width: 40px; height: 40px; display: grid; place-items: center; }
+.icon-btn { background: none; border: none; color: var(--text); cursor: pointer; width: 40px; height: 40px; display: grid; place-items: center; font-size: 1.2rem; }
