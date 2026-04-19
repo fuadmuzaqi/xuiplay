@@ -8,7 +8,8 @@ const state = {
   isPlaying: false,
   theme: localStorage.getItem('theme') || "dark",
   progressInterval: null,
-  deferredPrompt: null
+  deferredPrompt: null,
+  searchQuery: ""
 };
 
 const ICONS = {
@@ -25,25 +26,34 @@ const refs = {
   currentTime: document.getElementById("currentTime"),
   durationTime: document.getElementById("durationTime"),
   themeToggle: document.getElementById("themeToggle"),
-  installBtn: document.getElementById("installBtn"),
-  refreshBtn: document.getElementById("refreshBtn"),
-  clearCacheBtn: document.getElementById("clearCacheBtn")
+  searchInput: document.getElementById("searchInput"),
+  genreNav: document.getElementById("genreNav"),
+  genreHeading: document.getElementById("genreHeading"),
+  installBtn: document.getElementById("installBtn")
 };
 
 document.addEventListener("DOMContentLoaded", () => {
   applyTheme(state.theme);
   bindEvents();
   loadLibrary();
-  if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(() => {});
 });
 
 function bindEvents() {
   refs.playPauseBtn.addEventListener("click", onPlayPause);
   document.getElementById("prevBtn").addEventListener("click", () => navigateTrack(-1));
   document.getElementById("nextBtn").addEventListener("click", () => navigateTrack(1));
-  refs.refreshBtn.addEventListener("click", () => location.reload());
-  refs.clearCacheBtn.addEventListener("click", clearCache);
+  document.getElementById("refreshBtn").addEventListener("click", () => location.reload());
+  
+  // LOGIKA SEARCH
+  refs.searchInput.addEventListener("input", (e) => {
+    state.searchQuery = e.target.value.toLowerCase();
+    renderPlaylist();
+    // Sembunyikan navigasi genre jika sedang mencari
+    refs.genreNav.style.opacity = state.searchQuery ? "0" : "1";
+    refs.genreNav.style.pointerEvents = state.searchQuery ? "none" : "auto";
+  });
 
+  // Time Bar Logic
   refs.timeBar.addEventListener("change", (e) => {
     if (state.player && state.playerReady) state.player.seekTo(e.target.value, true);
   });
@@ -56,28 +66,6 @@ function bindEvents() {
     applyTheme(state.theme);
     localStorage.setItem('theme', state.theme);
   });
-
-  window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    state.deferredPrompt = e;
-    refs.installBtn.style.display = 'grid';
-  });
-
-  refs.installBtn.addEventListener('click', async () => {
-    if (state.deferredPrompt) {
-      state.deferredPrompt.prompt();
-      state.deferredPrompt = null;
-      refs.installBtn.style.display = 'none';
-    }
-  });
-}
-
-function clearCache() {
-  if (confirm("Hapus cache dan reset aplikasi?")) {
-    localStorage.clear();
-    caches.keys().then(names => names.forEach(n => caches.delete(n)));
-    location.reload();
-  }
 }
 
 async function loadLibrary() {
@@ -86,7 +74,7 @@ async function loadLibrary() {
     const data = await res.json();
     state.library = data.genres || [];
     if (state.library.length) {
-      state.activeGenreId = state.activeGenreId || state.library[0].id;
+      state.activeGenreId = state.library[0].id;
       renderGenres();
       renderPlaylist();
     }
@@ -107,15 +95,37 @@ window.switchGenre = (id) => {
 };
 
 function renderPlaylist() {
-  const genre = state.library.find(g => g.id === state.activeGenreId);
-  const tracks = genre?.tracks || [];
-  document.getElementById("genreHeading").textContent = genre?.name || "Genre";
-  document.getElementById("trackCount").textContent = `${tracks.length} track`;
+  let tracksToShow = [];
+  
+  if (state.searchQuery) {
+    // Cari di SEMUA genre
+    refs.genreHeading.textContent = "Hasil Pencarian";
+    state.library.forEach(genre => {
+      genre.tracks.forEach(track => {
+        if (track.title.toLowerCase().includes(state.searchQuery) || 
+            track.artist.toLowerCase().includes(state.searchQuery)) {
+          tracksToShow.push(track);
+        }
+      });
+    });
+  } else {
+    // Tampilkan genre aktif
+    const genre = state.library.find(g => g.id === state.activeGenreId);
+    refs.genreHeading.textContent = genre?.name || "Genre";
+    tracksToShow = genre?.tracks || [];
+  }
 
-  refs.playlistContainer.innerHTML = tracks.map((t, i) => {
+  document.getElementById("trackCount").textContent = `${tracksToShow.length} track`;
+
+  if (tracksToShow.length === 0) {
+    refs.playlistContainer.innerHTML = `<p class="muted" style="text-align:center; padding: 20px;">Lagu tidak ditemukan.</p>`;
+    return;
+  }
+
+  refs.playlistContainer.innerHTML = tracksToShow.map((t, i) => {
     const isActive = state.activeTrack?.id === t.id;
     return `
-      <button class="track-row ${isActive ? 'active' : ''}" onclick="selectTrack(${i})">
+      <button class="track-row ${isActive ? 'active' : ''}" onclick="playSpecificTrack('${t.id}', ${i})">
         <span class="track-index">${i + 1}</span>
         <div class="track-info">
           <span class="track-title">${t.title}</span>
@@ -129,23 +139,28 @@ function renderPlaylist() {
   }).join("");
 }
 
-window.selectTrack = async (index) => {
-  const genre = state.library.find(g => g.id === state.activeGenreId);
-  const track = genre.tracks[index];
-  if (!track) return;
+// Play track berdasarkan ID (berguna saat pencarian)
+window.playSpecificTrack = async (trackId, indexInView) => {
+  let foundTrack = null;
+  state.library.forEach(g => {
+    const t = g.tracks.find(track => track.id === trackId);
+    if (t) foundTrack = t;
+  });
 
-  state.activeTrack = track;
-  state.activeTrackIndex = index;
-  document.getElementById("nowTitle").textContent = track.title;
-  document.getElementById("nowArtist").textContent = track.artist;
+  if (!foundTrack) return;
+
+  state.activeTrack = foundTrack;
+  state.activeTrackIndex = indexInView; // Index saat ini di tampilan
+  document.getElementById("nowTitle").textContent = foundTrack.title;
+  document.getElementById("nowArtist").textContent = foundTrack.artist;
 
   if (!state.player) {
     const tag = document.createElement('script');
     tag.src = "https://www.youtube.com/iframe_api";
     document.head.appendChild(tag);
-    window.onYouTubeIframeAPIReady = () => createPlayer(track.youtubeVideoId);
+    window.onYouTubeIframeAPIReady = () => createPlayer(foundTrack.youtubeVideoId);
   } else {
-    state.player.loadVideoById(track.youtubeVideoId);
+    state.player.loadVideoById(foundTrack.youtubeVideoId);
   }
   renderPlaylist();
 };
@@ -173,7 +188,7 @@ function navigateTrack(dir) {
   let nextIndex = state.activeTrackIndex + dir;
   if (nextIndex >= genre.tracks.length) nextIndex = 0;
   if (nextIndex < 0) nextIndex = genre.tracks.length - 1;
-  selectTrack(nextIndex);
+  window.playSpecificTrack(genre.tracks[nextIndex].id, nextIndex);
 }
 
 function startTimer() {
