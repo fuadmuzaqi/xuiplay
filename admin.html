@@ -9,12 +9,15 @@
 
   <style>
     :root {
+      /* Dark Mode (Default) Variables */
       --bg: #050505;
-      --surface: rgba(20, 20, 20, 0.6);
-      --border: rgba(255, 255, 255, 0.08);
+      --surface: rgba(255, 255, 255, 0.03);
+      --border: rgba(255, 255, 255, 0.1);
       --text: #ffffff;
-      --text-muted: #888888;
-      --accent: #00f2ff; /* Electric Cyan */
+      --text-muted: #a1a1aa;
+      --accent: #00f2ff;
+      --input-bg: rgba(255, 255, 255, 0.02);
+      
       --font-display: "Boska", serif;
       --font-body: "Satoshi", sans-serif;
       --font-mono: "JetBrains Mono", monospace;
@@ -22,36 +25,33 @@
     }
 
     [data-theme="light"] {
-      --bg: #f8f9fa;
-      --surface: rgba(255, 255, 255, 0.8);
+      --bg: #ffffff;
+      --surface: rgba(0, 0, 0, 0.02);
       --border: rgba(0, 0, 0, 0.08);
-      --text: #000000;
-      --text-muted: #666666;
+      --text: #0a0a0a;
+      --text-muted: #71717a;
       --accent: #0070f3;
+      --input-bg: rgba(0, 0, 0, 0.01);
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
     
     body {
       background-color: var(--bg);
-      background-image: 
-        radial-gradient(circle at 0% 0%, rgba(0, 242, 255, 0.03) 0%, transparent 40%),
-        radial-gradient(circle at 100% 100%, rgba(255, 0, 128, 0.02) 0%, transparent 40%);
       color: var(--text);
       font-family: var(--font-body);
       min-height: 100vh;
       -webkit-font-smoothing: antialiased;
-      overflow-x: hidden;
+      transition: background-color 0.4s ease;
     }
 
     .container { max-width: 1200px; margin: 0 auto; padding: 0 2rem; }
 
     header {
-      padding: 4rem 0 2rem 0;
+      padding: 3rem 0;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      animation: fadeIn 0.8s ease;
     }
 
     .logo {
@@ -62,176 +62,152 @@
     }
 
     /* Layout */
-    .hero { margin-bottom: 4rem; animation: fadeInUp 0.8s ease; }
-    .hero h1 { font-family: var(--font-display); font-size: 4.5rem; line-height: 0.9; letter-spacing: -0.04em; margin-bottom: 1rem; }
+    .hero h1 { 
+      font-family: var(--font-display); 
+      font-size: clamp(2.5rem, 8vw, 4.5rem); 
+      line-height: 1; 
+      letter-spacing: -0.04em; 
+      margin-bottom: 4rem; 
+    }
     
     .app-wrapper {
       display: grid;
       grid-template-columns: 1fr 450px;
       gap: 5rem;
       align-items: start;
-      padding-bottom: 10rem;
+      padding-bottom: 8rem;
     }
 
-    /* Component Style */
     .glass-card {
       background: var(--surface);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
       border: 1px solid var(--border);
       border-radius: 24px;
-      padding: 2.5rem;
-      transition: var(--transition);
+      padding: 2rem;
     }
 
     .label {
-      font-size: 11px;
-      font-weight: 900;
+      font-size: 10px;
+      font-weight: 800;
       text-transform: uppercase;
-      letter-spacing: 0.2em;
+      letter-spacing: 0.15em;
       color: var(--text-muted);
       margin-bottom: 1.5rem;
       display: block;
     }
 
-    /* Input Styling */
-    .input-group { margin-bottom: 3rem; }
-    .input-field {
-      position: relative;
-      margin-bottom: 1.5rem;
-    }
-
+    /* Fix Visibilitas Input */
     input {
       width: 100%;
-      background: transparent;
+      background: var(--input-bg);
       border: none;
       border-bottom: 1px solid var(--border);
-      color: var(--text);
-      padding: 1rem 0;
-      font-size: 1.25rem;
-      font-weight: 400;
+      color: var(--text); /* Memastikan teks terlihat di dark/light mode */
+      padding: 1rem 0.5rem;
+      font-size: 1.1rem;
       outline: none;
       transition: var(--transition);
     }
 
-    input:focus { border-color: var(--accent); }
-    input::placeholder { color: rgba(255,255,255,0.1); }
+    input:focus {
+      border-color: var(--accent);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    input::placeholder {
+      color: var(--text-muted);
+      opacity: 0.5;
+    }
 
     /* Buttons */
     .btn {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      padding: 1.25rem 2.5rem;
-      font-size: 14px;
+      padding: 1rem 2rem;
+      font-size: 13px;
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.1em;
+      letter-spacing: 0.05em;
       cursor: pointer;
       border: 1px solid var(--border);
       background: transparent;
       color: var(--text);
-      border-radius: 100px;
+      border-radius: 12px;
       transition: var(--transition);
     }
 
     .btn:hover {
       background: var(--text);
       color: var(--bg);
-      transform: translateY(-2px);
     }
 
     .btn-accent {
-      background: var(--accent);
-      color: #000;
+      background: var(--text);
+      color: var(--bg);
       border: none;
-    }
-
-    .btn-accent:hover {
-      background: #fff;
-      box-shadow: 0 10px 30px rgba(0, 242, 255, 0.2);
     }
 
     /* Song Item */
     .song-item {
-      margin-bottom: 3rem;
-      padding-left: 2rem;
-      border-left: 1px solid var(--border);
+      margin-bottom: 2.5rem;
+      padding: 1.5rem;
+      background: rgba(255, 255, 255, 0.02);
+      border-radius: 16px;
       position: relative;
-      animation: slideIn 0.5s ease forwards;
     }
-
-    .song-item:hover { border-left-color: var(--accent); }
 
     .btn-remove {
       position: absolute;
-      left: -10px;
-      top: 0;
-      background: var(--bg);
-      border: 1px solid var(--border);
+      right: 1.5rem;
+      top: 1.5rem;
+      background: none;
+      border: none;
       color: var(--text-muted);
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
       cursor: pointer;
-      font-size: 10px;
+      font-size: 1.2rem;
+    }
+
+    /* Mode Toggle Icon */
+    #themeToggle {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      color: var(--text);
+      cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
+      font-size: 1.2rem;
+      transition: var(--transition);
     }
 
-    .btn-remove:hover { color: var(--danger); border-color: var(--danger); }
+    #themeToggle:hover {
+      border-color: var(--text);
+    }
 
     /* Output */
-    .output-card {
-      position: sticky;
-      top: 2rem;
-    }
-
     .sql-area {
       width: 100%;
-      height: 480px;
-      background: rgba(0,0,0,0.3);
+      height: 450px;
+      background: rgba(0,0,0,0.2);
       border: 1px solid var(--border);
       border-radius: 12px;
-      padding: 1.5rem;
+      padding: 1.2rem;
       color: var(--accent);
       font-family: var(--font-mono);
       font-size: 12px;
       line-height: 1.6;
       resize: none;
       outline: none;
-      margin-top: 1rem;
-    }
-
-    #themeToggle {
-      background: none;
-      border: none;
-      color: var(--text-muted);
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.1em;
-      cursor: pointer;
-    }
-
-    /* Animations */
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(30px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes slideIn {
-      from { opacity: 0; transform: translateX(20px); }
-      to { opacity: 1; transform: translateX(0); }
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
     }
 
     @media (max-width: 1000px) {
-      .app-wrapper { grid-template-columns: 1fr; }
+      .app-wrapper { grid-template-columns: 1fr; gap: 3rem; }
       .hero h1 { font-size: 3rem; }
-      .output-card { position: static; }
     }
   </style>
 </head>
@@ -239,48 +215,48 @@
 
   <header class="container">
     <div class="logo">STUDIO.</div>
-    <button id="themeToggle">APPEARANCE: DARK</button>
+    <button id="themeToggle" title="Toggle Theme">
+      <span id="themeIcon">☼</span>
+    </button>
   </header>
 
   <main class="container">
     <section class="hero">
-      <h1>Batch SQL<br>Processor.</h1>
+      <h1>SQL<br>Statement.</h1>
     </section>
 
     <div class="app-wrapper">
       <section>
-        <div class="input-group">
-          <span class="label">Primary Category</span>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
-            <input type="text" id="genreName" placeholder="Genre Name">
-            <input type="text" id="genreSlug" placeholder="Slug">
+        <div style="margin-bottom: 4rem;">
+          <span class="label">01 Category</span>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+            <input type="text" id="genreName" placeholder="Genre Name (ex: Koplo)">
+            <input type="text" id="genreSlug" placeholder="Slug (ex: koplo)">
           </div>
         </div>
 
-        <div class="input-group">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 3rem;">
-            <span class="label" style="margin: 0;">Track Entries</span>
-            <button class="btn" id="addSongBtn" style="padding: 0.6rem 1.5rem; font-size: 11px;">+ Add Track</button>
+        <div style="margin-bottom: 4rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+            <span class="label" style="margin: 0;">02 Tracklist</span>
+            <button class="btn" id="addSongBtn" style="padding: 0.5rem 1rem; border-radius: 8px;">+ Add</button>
           </div>
 
-          <div id="songBuilder">
-            </div>
+          <div id="songBuilder"></div>
 
-          <div style="display: flex; gap: 1.5rem; margin-top: 4rem;">
-            <button class="btn btn-accent" id="generateSqlBtn">Execute & Generate</button>
-            <button class="btn" id="resetBtn">Clear All</button>
+          <div style="display: flex; gap: 1rem; margin-top: 3rem;">
+            <button class="btn btn-accent" id="generateSqlBtn">Generate SQL</button>
+            <button class="btn" id="resetBtn">Reset</button>
           </div>
         </div>
       </section>
 
       <aside>
-        <div class="glass-card output-card">
+        <div class="glass-card">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-            <span class="label" style="margin: 0;">SQL Statement</span>
-            <button id="copyBtn" style="background:none; border:none; color:var(--accent); font-size: 11px; font-weight: 700; cursor:pointer;">COPY CODE</button>
+            <span class="label" style="margin: 0;">Raw Output</span>
+            <button id="copyBtn" style="background:none; border:none; color:var(--text); font-size: 10px; font-weight: 800; cursor:pointer; letter-spacing: 0.1em;">COPY</button>
           </div>
-          <textarea id="sqlOutput" class="sql-area" readonly placeholder="Waiting for input..."></textarea>
-          <p style="font-size: 10px; color: var(--text-muted); margin-top: 1.5rem; text-align: center;">Ready for Turso & SQLite Deployment</p>
+          <textarea id="sqlOutput" class="sql-area" readonly placeholder="Output will appear here..."></textarea>
         </div>
       </aside>
     </div>
@@ -288,15 +264,32 @@
 
   <template id="songItemTemplate">
     <div class="song-item">
-      <button class="btn-remove song-remove-btn">×</button>
+      <button class="btn-remove song-remove-btn">✕</button>
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
-        <input type="text" class="song-track-title" placeholder="Track Title">
-        <input type="text" class="song-track-artist" placeholder="Artist">
+        <div>
+          <label class="label" style="font-size: 8px; margin-bottom: 4px;">Title</label>
+          <input type="text" class="song-track-title" placeholder="Track Title">
+        </div>
+        <div>
+          <label class="label" style="font-size: 8px; margin-bottom: 4px;">Artist</label>
+          <input type="text" class="song-track-artist" placeholder="Artist Name">
+        </div>
       </div>
-      <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 1.5rem;">
-        <input type="url" class="song-track-url" placeholder="YouTube URL">
-        <input type="text" class="song-track-video-id" placeholder="Video ID">
-        <input type="number" class="song-track-order" placeholder="Sort">
+      <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem;">
+        <div>
+          <label class="label" style="font-size: 8px; margin-bottom: 4px;">URL</label>
+          <input type="url" class="song-track-url" placeholder="YouTube Link">
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+           <div>
+            <label class="label" style="font-size: 8px; margin-bottom: 4px;">ID</label>
+            <input type="text" class="song-track-video-id">
+           </div>
+           <div>
+            <label class="label" style="font-size: 8px; margin-bottom: 4px;">Sort</label>
+            <input type="number" class="song-track-order">
+           </div>
+        </div>
       </div>
     </div>
   </template>
@@ -304,6 +297,7 @@
   <script>
     const refs = {
       themeToggle: document.getElementById('themeToggle'),
+      themeIcon: document.getElementById('themeIcon'),
       genreName: document.getElementById('genreName'),
       genreSlug: document.getElementById('genreSlug'),
       addSongBtn: document.getElementById('addSongBtn'),
@@ -317,11 +311,11 @@
 
     let theme = 'dark';
 
-    // Theme Switch
+    // Theme Switcher Logic
     refs.themeToggle.addEventListener('click', () => {
       theme = theme === 'dark' ? 'light' : 'dark';
       document.documentElement.setAttribute('data-theme', theme);
-      refs.themeToggle.textContent = `APPEARANCE: ${theme.toUpperCase()}`;
+      refs.themeIcon.textContent = theme === 'dark' ? '☼' : '☾';
     });
 
     // Auto Slugify
@@ -347,8 +341,7 @@
       });
 
       clone.querySelector('.song-remove-btn').addEventListener('click', (e) => {
-        e.target.closest('.song-item').style.opacity = '0';
-        setTimeout(() => e.target.closest('.song-item').remove(), 300);
+        e.target.closest('.song-item').remove();
       });
 
       refs.songBuilder.appendChild(clone);
@@ -358,40 +351,39 @@
       const gName = refs.genreName.value.trim().replace(/'/g, "''");
       const gSlug = refs.genreSlug.value.trim();
 
-      if (!gName) return alert('Input Category Name');
+      if (!gName) return alert('Category name is required.');
 
+      // SQL bersih tanpa komentar
       let sql = `INSERT OR IGNORE INTO genres (name, slug) VALUES ('${gName}', '${gSlug}');\n\n`;
       
       const tracks = Array.from(refs.songBuilder.querySelectorAll('.song-item'));
       if (tracks.length > 0) {
-        sql += `INSERT INTO tracks (genre_id, title, artist, youtube_url, youtube_video_id, sort_order)\nVALUES\n`;
+        sql += `INSERT INTO tracks (genre_id, title, artist, youtube_url, youtube_video_id, sort_order) VALUES\n`;
         const values = tracks.map(t => {
           const title = t.querySelector('.song-track-title').value.replace(/'/g, "''");
           const artist = t.querySelector('.song-track-artist').value.replace(/'/g, "''");
           const url = t.querySelector('.song-track-url').value;
           const vid = t.querySelector('.song-track-video-id').value;
           const order = t.querySelector('.song-track-order').value;
-          return `  ((SELECT id FROM genres WHERE slug = '${gSlug}'), '${title}', '${artist}', '${url}', '${vid}', ${order})`;
+          return `((SELECT id FROM genres WHERE slug = '${gSlug}'), '${title}', '${artist}', '${url}', '${vid}', ${order})`;
         });
         sql += values.join(',\n') + ';';
       }
 
       refs.sqlOutput.value = sql;
-      refs.sqlOutput.style.borderColor = 'var(--accent)';
-      setTimeout(() => refs.sqlOutput.style.borderColor = 'var(--border)', 1000);
     }
 
     refs.addSongBtn.addEventListener('click', addSongItem);
     refs.generateSqlBtn.addEventListener('click', generateSql);
-    refs.resetBtn.addEventListener('click', () => confirm('Wipe all data?') && location.reload());
+    refs.resetBtn.addEventListener('click', () => confirm('Reset all?') && location.reload());
     refs.copyBtn.addEventListener('click', () => {
       refs.sqlOutput.select();
       document.execCommand('copy');
-      refs.copyBtn.textContent = 'COPIED!';
-      setTimeout(() => refs.copyBtn.textContent = 'COPY CODE', 2000);
+      refs.copyBtn.textContent = 'COPIED';
+      setTimeout(() => refs.copyBtn.textContent = 'COPY', 2000);
     });
 
-    // Start with one item
+    // Start with 1 row
     addSongItem();
   </script>
 </body>
