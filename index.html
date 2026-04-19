@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Music Station</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&f[]=boska@400,500,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/styles.css" />
+</head>
+<body class="app-shell">
+  <a class="skip-link" href="#main-content">Lewati ke konten</a>
+
+  <header class="topbar">
+    <div class="brand-wrap">
+      <img src="./assets/logo.svg" alt="Music Station logo" class="brand-logo" width="44" height="44" />
+      <div>
+        <p class="eyebrow">Static HTML Music Player</p>
+        <h1 class="brand-title">Music Station</h1>
+      </div>
+    </div>
+
+    <div class="topbar-actions">
+      <button class="icon-btn" id="themeToggle" type="button" aria-label="Ganti tema">
+        <span class="icon-sun">☀</span>
+      </button>
+      <a class="ghost-link" href="./admin.html">Admin</a>
+    </div>
+  </header>
+
+  <nav class="genre-bar" aria-label="Folder genre">
+    <div id="genreTabs" class="genre-tabs"></div>
+  </nav>
+
+  <main id="main-content" class="main-grid">
+    <section class="player-panel surface-card">
+      <div class="player-cover" id="coverArtwork">
+        <div class="cover-gradient"></div>
+        <div class="cover-content">
+          <p class="eyebrow">Now playing</p>
+          <h2 id="nowTitle">Belum ada lagu dipilih</h2>
+          <p id="nowArtist">Pilih lagu dari folder genre di atas</p>
+        </div>
+      </div>
+
+      <div class="player-controls">
+        <div class="transport-row">
+          <button id="prevBtn" class="transport-btn" type="button" aria-label="Lagu sebelumnya">⏮</button>
+          <button id="playPauseBtn" class="play-btn" type="button" aria-label="Play atau pause">▶</button>
+          <button id="nextBtn" class="transport-btn" type="button" aria-label="Lagu berikutnya">⏭</button>
+        </div>
+
+        <div class="meta-row">
+          <div class="volume-box">
+            <label for="volumeRange">Volume</label>
+            <input id="volumeRange" type="range" min="0" max="100" value="70" />
+          </div>
+
+          <button id="eqToggleBtn" class="secondary-btn" type="button" aria-expanded="false">
+            Equalizer
+          </button>
+        </div>
+
+        <div class="eq-visualizer" id="eqVisualizer" aria-hidden="true">
+          <span></span><span></span><span></span><span></span><span></span>
+          <span></span><span></span><span></span><span></span><span></span>
+        </div>
+      </div>
+
+      <aside class="eq-panel" id="eqPanel" hidden>
+        <div class="eq-header">
+          <div>
+            <p class="eyebrow">Graphic equalizer</p>
+            <h3>Preset visual</h3>
+          </div>
+          <div class="preset-pills">
+            <button class="preset-btn active" data-preset="flat" type="button">Flat</button>
+            <button class="preset-btn" data-preset="warm" type="button">Warm</button>
+            <button class="preset-btn" data-preset="club" type="button">Club</button>
+          </div>
+        </div>
+
+        <div class="eq-sliders" id="eqSliders"></div>
+      </aside>
+    </section>
+
+    <section class="playlist-panel surface-card">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">Playlist</p>
+          <h2 id="genreHeading">Semua genre</h2>
+        </div>
+        <p class="muted-text" id="trackCount">0 track</p>
+      </div>
+
+      <div id="playlistContainer" class="playlist-list"></div>
+    </section>
+  </main>
+
+  <div id="youtube-player" class="yt-hidden" aria-hidden="true"></div>
+
+  <script src="./js/app.js" defer></script>
+</body>
+</html>
