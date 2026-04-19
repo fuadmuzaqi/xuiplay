@@ -6,8 +6,8 @@ const state = {
   player: null,
   playerReady: false,
   isPlaying: false,
-  volume: 70,
   youtubeApiPromise: null,
+  pendingAutoplay: false,
   eqValues: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
   theme: window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
 };
@@ -22,8 +22,6 @@ const refs = {
   playPauseBtn: document.getElementById("playPauseBtn"),
   prevBtn: document.getElementById("prevBtn"),
   nextBtn: document.getElementById("nextBtn"),
-  volumeRange: document.getElementById("volumeRange"),
-  coverArtwork: document.getElementById("coverArtwork"),
   eqPanel: document.getElementById("eqPanel"),
   eqToggleBtn: document.getElementById("eqToggleBtn"),
   eqSliders: document.getElementById("eqSliders"),
@@ -49,7 +47,6 @@ function bindEvents() {
   refs.playPauseBtn.addEventListener("click", onPlayPause);
   refs.prevBtn.addEventListener("click", playPrevious);
   refs.nextBtn.addEventListener("click", playNext);
-  refs.volumeRange.addEventListener("input", onVolumeChange);
 
   refs.eqToggleBtn.addEventListener("click", () => {
     const expanded = refs.eqToggleBtn.getAttribute("aria-expanded") === "true";
@@ -73,15 +70,12 @@ async function loadLibrary() {
     const data = await response.json();
 
     state.library = data.genres || [];
+
     if (!state.library.length) {
       refs.genreTabs.innerHTML = "";
       refs.genreHeading.textContent = "Belum ada genre";
       refs.trackCount.textContent = "0 track";
-      refs.playlistContainer.innerHTML = `
-        <div class="empty-state">
-          Belum ada genre atau track. Tambahkan dulu dari halaman admin.
-        </div>
-      `;
+      refs.playlistContainer.innerHTML = `<div class="empty-state">Belum ada genre atau lagu.</div>`;
       return;
     }
 
@@ -89,23 +83,19 @@ async function loadLibrary() {
     renderGenres();
     renderPlaylist();
   } catch (error) {
-    refs.playlistContainer.innerHTML = `
-      <div class="empty-state">Gagal memuat library. Coba refresh halaman.</div>
-    `;
+    refs.playlistContainer.innerHTML = `<div class="empty-state">Gagal memuat playlist.</div>`;
   }
 }
 
 function renderGenres() {
-  refs.genreTabs.innerHTML = state.library
-    .map((genre) => `
-      <button
-        class="genre-tab ${genre.id === state.activeGenreId ? "active" : ""}"
-        type="button"
-        data-genre-id="${genre.id}">
-        📁 ${escapeHtml(genre.name)}
-      </button>
-    `)
-    .join("");
+  refs.genreTabs.innerHTML = state.library.map((genre) => `
+    <button
+      class="genre-tab ${genre.id === state.activeGenreId ? "active" : ""}"
+      type="button"
+      data-genre-id="${genre.id}">
+      ${escapeHtml(genre.name)}
+    </button>
+  `).join("");
 
   refs.genreTabs.querySelectorAll(".genre-tab").forEach((button) => {
     button.addEventListener("click", () => {
@@ -124,36 +114,27 @@ function renderPlaylist() {
   refs.trackCount.textContent = `${tracks.length} track`;
 
   if (!tracks.length) {
-    refs.playlistContainer.innerHTML = `
-      <div class="empty-state">Genre ini belum punya lagu.</div>
-    `;
+    refs.playlistContainer.innerHTML = `<div class="empty-state">Genre ini belum punya lagu.</div>`;
     return;
   }
 
-  refs.playlistContainer.innerHTML = tracks.map((track, index) => {
-    const activeClass = state.activeTrack?.id === track.id ? "active" : "";
-    const initials = getInitials(track.title);
-    const thumb = track.coverUrl
-      ? `<img src="${escapeAttribute(track.coverUrl)}" alt="${escapeAttribute(track.title)}" loading="lazy" width="56" height="56">`
-      : initials;
+  refs.playlistContainer.innerHTML = tracks.map((track, index) => `
+    <button
+      class="track-row ${state.activeTrack?.id === track.id ? "active" : ""}"
+      type="button"
+      data-track-index="${index}"
+      aria-label="Putar ${escapeAttribute(track.title)}">
+      <span class="track-info">
+        <span class="track-title">${escapeHtml(track.title)}</span>
+        <span class="track-artist">${escapeHtml(track.artist || "Unknown artist")}</span>
+      </span>
+      <span class="track-playmark">
+        ${state.activeTrack?.id === track.id && state.isPlaying ? "⏸" : "▶"}
+      </span>
+    </button>
+  `).join("");
 
-    return `
-      <article class="track-card ${activeClass}" data-track-id="${track.id}">
-        <div class="track-thumb" style="--accent:${escapeAttribute(track.accentColor || "#01696f")}">
-          ${thumb}
-        </div>
-        <div class="track-meta">
-          <h3>${escapeHtml(track.title)}</h3>
-          <p>${escapeHtml(track.artist || "Unknown artist")}</p>
-        </div>
-        <button class="track-action" type="button" data-track-index="${index}" aria-label="Putar ${escapeAttribute(track.title)}">
-          ${state.activeTrack?.id === track.id && state.isPlaying ? "⏸" : "▶"}
-        </button>
-      </article>
-    `;
-  }).join("");
-
-  refs.playlistContainer.querySelectorAll(".track-action").forEach((button) => {
+  refs.playlistContainer.querySelectorAll(".track-row").forEach((button) => {
     button.addEventListener("click", () => {
       const index = Number(button.dataset.trackIndex);
       selectTrack(index, true);
@@ -171,11 +152,11 @@ async function selectTrack(index, autoplay = true) {
   updateNowPlaying(track);
 
   await ensureYouTubeApi();
+
   if (!state.player) {
     createPlayer(track.youtubeVideoId);
-    if (autoplay) {
-      state.pendingAutoplay = true;
-    }
+    if (autoplay) state.pendingAutoplay = true;
+    renderPlaylist();
     return;
   }
 
@@ -191,7 +172,6 @@ async function selectTrack(index, autoplay = true) {
 function updateNowPlaying(track) {
   refs.nowTitle.textContent = track.title;
   refs.nowArtist.textContent = track.artist || "Unknown artist";
-  refs.coverArtwork.style.background = `linear-gradient(135deg, ${track.accentColor || "#01696f"}, rgba(161,44,123,0.7))`;
 }
 
 function onPlayPause() {
@@ -221,14 +201,6 @@ function playNext() {
   if (!activeGenre?.tracks?.length) return;
   const nextIndex = state.activeTrackIndex < activeGenre.tracks.length - 1 ? state.activeTrackIndex + 1 : 0;
   selectTrack(nextIndex, true);
-}
-
-function onVolumeChange(event) {
-  const value = Number(event.target.value);
-  state.volume = value;
-  if (state.playerReady && state.player) {
-    state.player.setVolume(value);
-  }
 }
 
 function ensureYouTubeApi() {
@@ -265,7 +237,6 @@ function createPlayer(videoId) {
     events: {
       onReady: (event) => {
         state.playerReady = true;
-        event.target.setVolume(state.volume);
         if (state.pendingAutoplay) {
           state.pendingAutoplay = false;
           event.target.playVideo();
@@ -319,6 +290,7 @@ function applyEqPreset(name) {
   if (!preset) return;
 
   state.eqValues = [...preset];
+
   refs.eqSliders.querySelectorAll("input").forEach((input, index) => {
     input.value = String(state.eqValues[index]);
   });
@@ -332,22 +304,13 @@ function applyEqPreset(name) {
 
 function updateEqVisualBoost() {
   const average = state.eqValues.reduce((sum, value) => sum + Math.abs(value), 0) / state.eqValues.length;
-  const boost = `${Math.min(52, 20 + average * 5)}%`;
+  const boost = `${Math.min(52, 18 + average * 5)}%`;
   refs.eqVisualizer.style.setProperty("--eq-boost", boost);
 }
 
 function applyTheme(theme) {
   document.documentElement.setAttribute("data-theme", theme);
   refs.themeToggle.textContent = theme === "dark" ? "☀" : "☾";
-}
-
-function getInitials(text) {
-  return text
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() || "")
-    .join("");
 }
 
 function escapeHtml(value = "") {
