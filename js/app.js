@@ -1,173 +1,258 @@
 const state = {
   library: [],
   activeGenreId: null,
+  activeTrack: null,
   activeTrackIndex: -1,
   player: null,
+  playerReady: false,
   isPlaying: false,
-  theme: 'dark',
-  timer: null
+  youtubeApiPromise: null,
+  pendingAutoplay: false,
+  eqValues: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  theme: localStorage.getItem('theme') || "dark",
+  progressInterval: null
 };
 
 const refs = {
+  genreTabs: document.getElementById("genreTabs"),
+  playlistContainer: document.getElementById("playlistContainer"),
+  genreHeading: document.getElementById("genreHeading"),
+  trackCount: document.getElementById("trackCount"),
+  nowTitle: document.getElementById("nowTitle"),
+  nowArtist: document.getElementById("nowArtist"),
+  playPauseBtn: document.getElementById("playPauseBtn"),
+  prevBtn: document.getElementById("prevBtn"),
+  nextBtn: document.getElementById("nextBtn"),
   timeBar: document.getElementById("timeBar"),
   currentTime: document.getElementById("currentTime"),
   durationTime: document.getElementById("durationTime"),
-  playPauseBtn: document.getElementById("playPauseBtn"),
-  genreTabs: document.getElementById("genreTabs"),
-  playlistContainer: document.getElementById("playlistContainer"),
+  eqPanel: document.getElementById("eqPanel"),
+  eqToggleBtn: document.getElementById("eqToggleBtn"),
+  eqSliders: document.getElementById("eqSliders"),
+  eqVisualizer: document.getElementById("eqVisualizer"),
   themeToggle: document.getElementById("themeToggle")
 };
 
-// Init
+const EQ_FREQUENCIES = ["32", "64", "125", "250", "500", "1k", "2k", "4k", "8k", "16k"];
+const EQ_PRESETS = {
+  flat: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  warm: [2, 3, 2, 1, 0, -1, -1, 0, 1, 1],
+  club: [3, 2, 1, 0, -1, 1, 2, 3, 2, 1]
+};
+
 document.addEventListener("DOMContentLoaded", () => {
-  setupTheme();
-  loadData();
-  attachEventListeners();
+  applyTheme(state.theme);
+  bindEvents();
+  renderEqSliders();
+  loadLibrary();
 });
 
-function attachEventListeners() {
-  refs.playPauseBtn.addEventListener("click", togglePlayback);
-  document.getElementById("nextBtn").addEventListener("click", playNext);
-  document.getElementById("prevBtn").addEventListener("click", playPrev);
-  
-  // FIX UNTUK MOBILE: Gunakan 'change' untuk finalisasi seek 
-  // agar tidak bentrok dengan render frame API YouTube
+function bindEvents() {
+  refs.playPauseBtn.addEventListener("click", onPlayPause);
+  refs.prevBtn.addEventListener("click", playPrevious);
+  refs.nextBtn.addEventListener("click", playNext);
+
+  // FIX SEEKING MOBILE: Gunakan 'change' untuk eksekusi, 'input' untuk feedback visual
   refs.timeBar.addEventListener("change", (e) => {
-    if (state.player) {
-      const targetTime = e.target.value;
-      state.player.seekTo(targetTime, true);
+    if (state.player && state.playerReady) {
+      state.player.seekTo(e.target.value, true);
     }
   });
 
-  // Visual update saat digeser (tanpa memicu seek API terus-menerus)
   refs.timeBar.addEventListener("input", (e) => {
     refs.currentTime.textContent = formatTime(e.target.value);
   });
 
-  refs.themeToggle.addEventListener("click", toggleTheme);
+  refs.eqToggleBtn.addEventListener("click", () => {
+    const expanded = refs.eqToggleBtn.getAttribute("aria-expanded") === "true";
+    refs.eqToggleBtn.setAttribute("aria-expanded", String(!expanded));
+    refs.eqPanel.hidden = expanded;
+  });
+
+  refs.themeToggle.addEventListener("click", () => {
+    state.theme = state.theme === "dark" ? "light" : "dark";
+    applyTheme(state.theme);
+    localStorage.setItem('theme', state.theme);
+  });
+
+  document.querySelectorAll(".preset-btn").forEach((button) => {
+    button.addEventListener("click", () => applyEqPreset(button.dataset.preset));
+  });
 }
 
-async function loadData() {
+// Logic: Timer Progress
+function startProgressTimer() {
+  if (state.progressInterval) clearInterval(state.progressInterval);
+  state.progressInterval = setInterval(() => {
+    if (state.player && state.isPlaying) {
+      const current = state.player.getCurrentTime();
+      const duration = state.player.getDuration();
+      
+      refs.timeBar.max = duration;
+      refs.timeBar.value = current;
+      
+      refs.currentTime.textContent = formatTime(current);
+      refs.durationTime.textContent = formatTime(duration);
+    }
+  }, 500);
+}
+
+function formatTime(seconds) {
+  const min = Math.floor(seconds / 60);
+  const sec = Math.floor(seconds % 60);
+  return `${min}:${sec < 10 ? '0' : ''}${sec}`;
+}
+
+async function loadLibrary() {
   try {
-    // Simulasi data jika API belum ada
-    const data = {
-      genres: [
-        { id: 1, name: "Chill", tracks: [{ title: "Lofi Study", artist: "Lofi Girl", youtubeVideoId: "jfKfPfyJRdk" }] },
-        { id: 2, name: "Pop", tracks: [{ title: "Starboy", artist: "The Weeknd", youtubeVideoId: "34Na4j8AVgA" }] }
-      ]
-    };
-    
-    state.library = data.genres;
-    state.activeGenreId = state.library[0].id;
-    renderAll();
-  } catch (e) { console.error("Load failed", e); }
-}
+    const response = await fetch("/api/library");
+    const data = await response.json();
+    state.library = data.genres || [];
+    if (!state.library.length) return;
 
-function renderAll() {
-  renderGenres();
-  renderPlaylist();
+    state.activeGenreId = state.activeGenreId || state.library[0].id;
+    renderGenres();
+    renderPlaylist();
+  } catch (error) {
+    console.error("Gagal memuat library");
+  }
 }
 
 function renderGenres() {
-  refs.genreTabs.innerHTML = state.library.map(g => `
-    <button class="genre-btn ${g.id === state.activeGenreId ? 'active' : ''}" 
-            onclick="selectGenre(${g.id})">${g.name}</button>
-  `).join("");
-}
-
-window.selectGenre = (id) => {
-  state.activeGenreId = id;
-  renderAll();
-};
-
-function renderPlaylist() {
-  const genre = state.library.find(g => g.id === state.activeGenreId);
-  const tracks = genre?.tracks || [];
-  
-  document.getElementById("trackCount").textContent = `${tracks.length} tracks`;
-  refs.playlistContainer.innerHTML = tracks.map((t, i) => `
-    <button class="track-item ${state.activeTrackIndex === i ? 'active' : ''}" onclick="playTrack(${i})">
-      <div class="track-meta">
-        <span class="t-title">${t.title}</span>
-        <span class="t-artist">${t.artist}</span>
-      </div>
-      <span class="t-icon">${state.activeTrackIndex === i && state.isPlaying ? '❙❙' : '▶'}</span>
+  refs.genreTabs.innerHTML = state.library.map((genre) => `
+    <button class="genre-tab ${genre.id === state.activeGenreId ? "active" : ""}" 
+            type="button" data-genre-id="${genre.id}">
+      ${genre.name}
     </button>
   `).join("");
+
+  refs.genreTabs.querySelectorAll(".genre-tab").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.activeGenreId = Number(button.dataset.genreId);
+      renderGenres();
+      renderPlaylist();
+    });
+  });
 }
 
-function playTrack(index) {
-  const genre = state.library.find(g => g.id === state.activeGenreId);
-  const track = genre.tracks[index];
-  state.activeTrackIndex = index;
-  
-  document.getElementById("nowTitle").textContent = track.title;
-  document.getElementById("nowArtist").textContent = track.artist;
+function renderPlaylist() {
+  const activeGenre = state.library.find((genre) => genre.id === state.activeGenreId);
+  const tracks = activeGenre?.tracks || [];
+  refs.genreHeading.textContent = activeGenre?.name || "Genre";
+  refs.trackCount.textContent = `${tracks.length} track`;
 
+  refs.playlistContainer.innerHTML = tracks.map((track, index) => `
+    <button class="track-row ${state.activeTrack?.id === track.id ? "active" : ""}" 
+            type="button" data-track-index="${index}">
+      <span class="track-info">
+        <span class="track-title">${track.title}</span>
+        <span class="track-artist">${track.artist || "Unknown artist"}</span>
+      </span>
+      <span>${state.activeTrack?.id === track.id && state.isPlaying ? "⏸" : "▶"}</span>
+    </button>
+  `).join("");
+
+  refs.playlistContainer.querySelectorAll(".track-row").forEach((button) => {
+    button.addEventListener("click", () => selectTrack(Number(button.dataset.trackIndex), true));
+  });
+}
+
+async function selectTrack(index, autoplay = true) {
+  const activeGenre = state.library.find((genre) => genre.id === state.activeGenreId);
+  const track = activeGenre?.tracks?.[index];
+  if (!track) return;
+
+  state.activeTrack = track;
+  state.activeTrackIndex = index;
+  refs.nowTitle.textContent = track.title;
+  refs.nowArtist.textContent = track.artist || "Unknown artist";
+
+  await ensureYouTubeApi();
   if (!state.player) {
-    initYouTube(track.youtubeVideoId);
+    createPlayer(track.youtubeVideoId);
+    if (autoplay) state.pendingAutoplay = true;
   } else {
-    state.player.loadVideoById(track.youtubeVideoId);
+    autoplay ? state.player.loadVideoById(track.youtubeVideoId) : state.player.cueVideoById(track.youtubeVideoId);
   }
   renderPlaylist();
 }
 
-function initYouTube(id) {
-  const tag = document.createElement('script');
-  tag.src = "https://www.youtube.com/iframe_api";
-  document.head.appendChild(tag);
-
-  window.onYouTubeIframeAPIReady = () => {
-    state.player = new YT.Player('youtube-player', {
-      videoId: id,
-      playerVars: { 'autoplay': 1, 'controls': 0, 'playsinline': 1 },
-      events: {
-        'onStateChange': (e) => {
-          state.isPlaying = (e.data === YT.PlayerState.PLAYING);
-          refs.playPauseBtn.textContent = state.isPlaying ? "❙❙" : "▶";
-          if (e.data === YT.PlayerState.PLAYING) startProgressLoop();
-          if (e.data === YT.PlayerState.ENDED) playNext();
-          renderPlaylist();
-        }
-      }
-    });
-  };
-}
-
-function startProgressLoop() {
-  if (state.timer) clearInterval(state.timer);
-  state.timer = setInterval(() => {
-    if (state.player && state.isPlaying) {
-      const curr = state.player.getCurrentTime();
-      const dur = state.player.getDuration();
-      refs.timeBar.max = dur;
-      refs.timeBar.value = curr;
-      refs.currentTime.textContent = formatTime(curr);
-      refs.durationTime.textContent = formatTime(dur);
-    }
-  }, 1000);
-}
-
-function formatTime(s) {
-  const min = Math.floor(s / 60);
-  const sec = Math.floor(s % 60);
-  return `${min}:${sec < 10 ? '0' : ''}${sec}`;
-}
-
-function togglePlayback() {
-  if (!state.player) return;
+function onPlayPause() {
+  if (!state.activeTrack) { selectTrack(0, true); return; }
+  if (!state.playerReady || !state.player) return;
   state.isPlaying ? state.player.pauseVideo() : state.player.playVideo();
 }
 
-function playNext() { /* Logika play next */ }
-function playPrev() { /* Logika play prev */ }
-
-function setupTheme() {
-  document.documentElement.setAttribute('data-theme', state.theme);
+function playPrevious() {
+  const activeGenre = state.library.find((genre) => genre.id === state.activeGenreId);
+  if (!activeGenre?.tracks?.length) return;
+  const nextIndex = state.activeTrackIndex > 0 ? state.activeTrackIndex - 1 : activeGenre.tracks.length - 1;
+  selectTrack(nextIndex, true);
 }
 
-function toggleTheme() {
-  state.theme = state.theme === 'dark' ? 'light' : 'dark';
-  document.documentElement.setAttribute('data-theme', state.theme);
-  refs.themeToggle.textContent = state.theme === 'dark' ? '☀' : '☾';
+function playNext() {
+  const activeGenre = state.library.find((genre) => genre.id === state.activeGenreId);
+  if (!activeGenre?.tracks?.length) return;
+  const nextIndex = state.activeTrackIndex < activeGenre.tracks.length - 1 ? state.activeTrackIndex + 1 : 0;
+  selectTrack(nextIndex, true);
+}
+
+function ensureYouTubeApi() {
+  if (window.YT && window.YT.Player) return Promise.resolve();
+  if (state.youtubeApiPromise) return state.youtubeApiPromise;
+  state.youtubeApiPromise = new Promise((resolve) => {
+    window.onYouTubeIframeAPIReady = () => resolve();
+    const script = document.createElement("script");
+    script.src = "https://www.youtube.com/iframe_api";
+    document.head.appendChild(script);
+  });
+  return state.youtubeApiPromise;
+}
+
+function createPlayer(videoId) {
+  state.player = new window.YT.Player("youtube-player", {
+    height: "1", width: "1", videoId,
+    playerVars: { autoplay: 0, controls: 0, rel: 0, playsinline: 1 },
+    events: {
+      onReady: (event) => {
+        state.playerReady = true;
+        if (state.pendingAutoplay) { state.pendingAutoplay = false; event.target.playVideo(); }
+      },
+      onStateChange: (event) => {
+        state.isPlaying = (event.data === window.YT.PlayerState.PLAYING);
+        refs.playPauseBtn.textContent = state.isPlaying ? "⏸" : "▶";
+        if (state.isPlaying) startProgressTimer();
+        else clearInterval(state.progressInterval);
+        if (event.data === window.YT.PlayerState.ENDED) playNext();
+        renderPlaylist();
+      }
+    }
+  });
+}
+
+function renderEqSliders() {
+  refs.eqSliders.innerHTML = EQ_FREQUENCIES.map((freq, index) => `
+    <div class="eq-band">
+      <input type="range" min="-6" max="6" value="${state.eqValues[index]}" step="1" data-band-index="${index}" />
+      <label>${freq}</label>
+    </div>
+  `).join("");
+  refs.eqSliders.querySelectorAll("input").forEach((input) => {
+    input.addEventListener("input", () => {
+      state.eqValues[Number(input.dataset.bandIndex)] = Number(input.value);
+    });
+  });
+}
+
+function applyEqPreset(name) {
+  state.eqValues = [...EQ_PRESETS[name]];
+  refs.eqSliders.querySelectorAll("input").forEach((input, index) => {
+    input.value = String(state.eqValues[index]);
+  });
+  document.querySelectorAll(".preset-btn").forEach((btn) => btn.classList.toggle("active", btn.dataset.preset === name));
+}
+
+function applyTheme(theme) {
+  document.documentElement.setAttribute("data-theme", theme);
+  refs.themeToggle.textContent = theme === "dark" ? "☀" : "☾";
 }
