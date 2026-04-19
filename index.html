@@ -5,208 +5,97 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Music Station</title>
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
-  
-  <style>
-    :root {
-      --bg: #f8f9fa;
-      --surface: #ffffff;
-      --primary: #2d3436;
-      --secondary: #636e72;
-      --accent: #0984e3;
-      --border: #dfe6e9;
-      --radius: 12px;
-    }
-
-    /* Dark Mode Support */
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #121212;
-        --surface: #1e1e1e;
-        --primary: #ffffff;
-        --secondary: #b2bec3;
-        --border: #2d3436;
-      }
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { 
-      font-family: 'Satoshi', sans-serif; 
-      background: var(--bg); 
-      color: var(--primary);
-      line-height: 1.5;
-      display: flex;
-      justify-content: center;
-    }
-
-    .app-shell {
-      width: 100%;
-      max-width: 480px; /* Mobile focused width */
-      min-height: 100vh;
-      background: var(--surface);
-      display: flex;
-      flex-direction: column;
-    }
-
-    /* Header */
-    .topbar {
-      padding: 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid var(--border);
-    }
-    .brand-title { font-size: 1.2rem; font-weight: 700; }
-    .icon-btn { 
-      background: none; border: 1px solid var(--border); 
-      padding: 8px; border-radius: 50%; cursor: pointer;
-      color: var(--primary);
-    }
-
-    /* Genre Navigation */
-    .genre-bar {
-      padding: 15px 20px;
-      overflow-x: auto;
-      white-space: nowrap;
-      scrollbar-width: none;
-    }
-    .genre-tabs button {
-      background: var(--bg);
-      border: none;
-      padding: 8px 16px;
-      margin-right: 8px;
-      border-radius: 20px;
-      font-size: 0.9rem;
-      color: var(--secondary);
-      cursor: pointer;
-    }
-
-    /* Player Panel */
-    .player-panel {
-      padding: 30px 20px;
-      text-align: center;
-    }
-    #nowTitle { font-size: 1.4rem; font-weight: 700; margin-bottom: 4px; }
-    #nowArtist { color: var(--secondary); font-size: 0.95rem; margin-bottom: 24px; }
-
-    .transport-row {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 30px;
-      margin-bottom: 20px;
-    }
-    .play-btn {
-      width: 64px; height: 64px;
-      border-radius: 50%;
-      border: none;
-      background: var(--primary);
-      color: var(--surface);
-      font-size: 1.5rem;
-      cursor: pointer;
-    }
-    .transport-btn {
-      background: none; border: none; font-size: 1.5rem; 
-      color: var(--primary); cursor: pointer;
-    }
-
-    /* Playlist - Text Only */
-    .playlist-panel {
-      flex: 1;
-      padding: 0 20px 40px;
-    }
-    .section-head { margin-bottom: 16px; }
-    .playlist-list {
-      display: flex;
-      flex-direction: column;
-    }
-    .track-item {
-      padding: 12px 0;
-      border-bottom: 1px solid var(--border);
-      cursor: pointer;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .track-info h4 { font-size: 1rem; font-weight: 500; }
-    .track-info p { font-size: 0.85rem; color: var(--secondary); }
-
-    /* Utilities */
-    .hidden { display: none; }
-    .eyebrow { 
-      text-transform: uppercase; 
-      letter-spacing: 1px; 
-      font-size: 0.7rem; 
-      color: var(--secondary);
-      margin-bottom: 4px;
-    }
-  </style>
+  <link rel="preconnect" href="https://api.fontshare.com">
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&f[]=boska@400,500,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/styles.css" />
 </head>
-<body class="app-shell">
+<body>
+  <a class="skip-link" href="#main-content">Lewati ke konten</a>
 
   <header class="topbar">
     <div class="brand-wrap">
-      <p class="eyebrow">Music Station</p>
-      <h1 class="brand-title">Library</h1>
+      <div class="brand-mark" aria-hidden="true">♪</div>
+      <div>
+        <p class="eyebrow">Music player</p>
+        <h1 class="brand-title">Music Station</h1>
+      </div>
     </div>
+
     <div class="topbar-actions">
-      <button class="icon-btn" id="themeToggle" type="button" aria-label="Ganti tema">
-        <span class="icon">🌓</span>
+      <button class="icon-btn" id="eqToggleBtn" type="button" aria-label="Buka equalizer" aria-expanded="false" title="Equalizer">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4 21v-7"></path>
+          <path d="M4 10V3"></path>
+          <path d="M12 21v-4"></path>
+          <path d="M12 10V3"></path>
+          <path d="M20 21v-9"></path>
+          <path d="M20 5V3"></path>
+          <path d="M2 10h4"></path>
+          <path d="M10 10h4"></path>
+          <path d="M18 12h4"></path>
+        </svg>
+      </button>
+
+      <button class="icon-btn" id="themeToggle" type="button" aria-label="Ganti tema" title="Ganti tema">
+        ☾
       </button>
     </div>
   </header>
 
-  <nav class="genre-bar">
-    <div id="genreTabs" class="genre-tabs">
-      <button>All</button>
-      <button>Lofi</button>
-      <button>Jazz</button>
-      <button>Pop</button>
-    </div>
+  <nav class="genre-strip" aria-label="Folder genre">
+    <div id="genreTabs" class="genre-tabs"></div>
   </nav>
 
-  <main id="main-content">
-    <section class="player-panel">
-      <div class="player-info">
-        <p class="eyebrow">Now Playing</p>
-        <h2 id="nowTitle">Belum ada lagu</h2>
-        <p id="nowArtist">Pilih dari list di bawah</p>
+  <main id="main-content" class="main-shell">
+    <section class="player-card">
+      <div class="now-block">
+        <p class="eyebrow">Now playing</p>
+        <h2 id="nowTitle">Belum ada lagu dipilih</h2>
+        <p id="nowArtist" class="muted">Pilih lagu dari daftar di bawah</p>
       </div>
 
-      <div class="player-controls">
-        <div class="transport-row">
-          <button id="prevBtn" class="transport-btn">⏮</button>
-          <button id="playPauseBtn" class="play-btn">▶</button>
-          <button id="nextBtn" class="transport-btn">⏭</button>
+      <div class="transport">
+        <button id="prevBtn" class="transport-btn" type="button" aria-label="Lagu sebelumnya">⏮</button>
+        <button id="playPauseBtn" class="play-btn" type="button" aria-label="Play atau pause">▶</button>
+        <button id="nextBtn" class="transport-btn" type="button" aria-label="Lagu berikutnya">⏭</button>
+      </div>
+
+      <div class="visualizer" id="eqVisualizer" aria-hidden="true">
+        <span></span><span></span><span></span><span></span><span></span>
+        <span></span><span></span><span></span>
+      </div>
+
+      <aside class="eq-panel" id="eqPanel" hidden>
+        <div class="eq-head">
+          <div>
+            <p class="eyebrow">Equalizer</p>
+            <h3>Preset visual</h3>
+          </div>
+          <div class="preset-pills">
+            <button class="preset-btn active" data-preset="flat" type="button">Flat</button>
+            <button class="preset-btn" data-preset="warm" type="button">Warm</button>
+            <button class="preset-btn" data-preset="club" type="button">Club</button>
+          </div>
         </div>
 
-        <button id="eqToggleBtn" class="icon-btn" type="button" title="Equalizer">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"></line><line x1="4" y1="10" x2="4" y2="3"></line><line x1="12" y1="21" x2="12" y2="12"></line><line x1="12" y1="8" x2="12" y2="3"></line><line x1="20" y1="21" x2="20" y2="16"></line><line x1="20" y1="12" x2="20" y2="3"></line><line x1="1" y1="14" x2="7" y2="14"></line><line x1="9" y1="8" x2="15" y2="8"></line><line x1="17" y1="16" x2="23" y2="16"></line></svg>
-        </button>
-      </div>
+        <div class="eq-sliders" id="eqSliders"></div>
+      </aside>
     </section>
 
-    <section class="playlist-panel">
-      <div class="section-head">
-        <h2 id="genreHeading">Playlist</h2>
-        <p class="eyebrow" id="trackCount">0 tracks</p>
+    <section class="playlist-card">
+      <div class="playlist-head">
+        <div>
+          <p class="eyebrow">Playlist</p>
+          <h2 id="genreHeading">Semua genre</h2>
+        </div>
+        <p id="trackCount" class="muted">0 track</p>
       </div>
 
-      <div id="playlistContainer" class="playlist-list">
-        <div class="track-item">
-          <div class="track-info">
-            <h4>Judul Lagu Contoh</h4>
-            <p>Nama Artis</p>
-          </div>
-          <span class="muted-text">3:45</span>
-        </div>
-      </div>
+      <div id="playlistContainer" class="playlist-list"></div>
     </section>
   </main>
 
-  <div id="youtube-player" class="hidden"></div>
+  <div id="youtube-player" class="yt-hidden" aria-hidden="true"></div>
 
   <script src="./js/app.js" defer></script>
 </body>
