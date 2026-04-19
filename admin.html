@@ -3,265 +3,284 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SQL Studio — Music Station</title>
+  <title>Studio — SQL Generator</title>
   
-  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@300,400,500,700&f[]=boska@300,400,500,700&display=swap" rel="stylesheet">
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@300,400,500,700,900&f[]=boska@300,400,500,700&display=swap" rel="stylesheet">
 
   <style>
     :root {
-      /* Colors - Ultra Minimalist Dark */
-      --bg: #0a0a0a;
-      --surface: #141414;
-      --surface-hover: #1c1c1c;
-      --border: #262626;
+      --bg: #050505;
+      --surface: rgba(20, 20, 20, 0.6);
+      --border: rgba(255, 255, 255, 0.08);
       --text: #ffffff;
-      --text-muted: #737373;
-      --accent: #ffffff;
-      --accent-text: #000000;
-      --danger: #ef4444;
-      
+      --text-muted: #888888;
+      --accent: #00f2ff; /* Electric Cyan */
       --font-display: "Boska", serif;
       --font-body: "Satoshi", sans-serif;
       --font-mono: "JetBrains Mono", monospace;
-      --transition: all 0.15s ease;
+      --transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     [data-theme="light"] {
-      --bg: #ffffff;
-      --surface: #f5f5f5;
-      --surface-hover: #eeeeee;
-      --border: #e5e5e5;
-      --text: #0a0a0a;
-      --text-muted: #737373;
-      --accent: #0a0a0a;
-      --accent-text: #ffffff;
+      --bg: #f8f9fa;
+      --surface: rgba(255, 255, 255, 0.8);
+      --border: rgba(0, 0, 0, 0.08);
+      --text: #000000;
+      --text-muted: #666666;
+      --accent: #0070f3;
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
     
     body {
       background-color: var(--bg);
+      background-image: 
+        radial-gradient(circle at 0% 0%, rgba(0, 242, 255, 0.03) 0%, transparent 40%),
+        radial-gradient(circle at 100% 100%, rgba(255, 0, 128, 0.02) 0%, transparent 40%);
       color: var(--text);
       font-family: var(--font-body);
+      min-height: 100vh;
       -webkit-font-smoothing: antialiased;
-      line-height: 1.5;
+      overflow-x: hidden;
     }
 
-    .container {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 0 2rem;
-    }
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 2rem; }
 
-    /* Header */
     header {
-      padding: 3rem 0;
+      padding: 4rem 0 2rem 0;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      animation: fadeIn 0.8s ease;
     }
 
-    .brand {
+    .logo {
       font-family: var(--font-display);
-      font-size: 1.25rem;
-      font-weight: 600;
-      letter-spacing: -0.01em;
-    }
-
-    /* Main Layout */
-    .app-grid {
-      display: grid;
-      grid-template-columns: 1fr 420px;
-      gap: 4rem;
-      margin-top: 2rem;
-      padding-bottom: 5rem;
-    }
-
-    /* Section Typography */
-    .section-title {
-      font-family: var(--font-display);
-      font-size: 2.5rem;
-      margin-bottom: 2.5rem;
+      font-size: 1.5rem;
+      font-weight: 700;
       letter-spacing: -0.03em;
     }
 
+    /* Layout */
+    .hero { margin-bottom: 4rem; animation: fadeInUp 0.8s ease; }
+    .hero h1 { font-family: var(--font-display); font-size: 4.5rem; line-height: 0.9; letter-spacing: -0.04em; margin-bottom: 1rem; }
+    
+    .app-wrapper {
+      display: grid;
+      grid-template-columns: 1fr 450px;
+      gap: 5rem;
+      align-items: start;
+      padding-bottom: 10rem;
+    }
+
+    /* Component Style */
+    .glass-card {
+      background: var(--surface);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 2.5rem;
+      transition: var(--transition);
+    }
+
     .label {
-      font-size: 10px;
-      font-weight: 700;
+      font-size: 11px;
+      font-weight: 900;
       text-transform: uppercase;
-      letter-spacing: 0.1em;
+      letter-spacing: 0.2em;
       color: var(--text-muted);
-      margin-bottom: 0.75rem;
+      margin-bottom: 1.5rem;
       display: block;
     }
 
-    /* Input & Forms */
+    /* Input Styling */
+    .input-group { margin-bottom: 3rem; }
+    .input-field {
+      position: relative;
+      margin-bottom: 1.5rem;
+    }
+
     input {
       width: 100%;
       background: transparent;
       border: none;
       border-bottom: 1px solid var(--border);
       color: var(--text);
-      padding: 0.75rem 0;
-      font-size: 1rem;
-      transition: var(--transition);
+      padding: 1rem 0;
+      font-size: 1.25rem;
+      font-weight: 400;
       outline: none;
-      border-radius: 0;
+      transition: var(--transition);
     }
 
-    input:focus {
-      border-color: var(--accent);
-    }
-
-    .form-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 2rem;
-      margin-bottom: 2.5rem;
-    }
-
-    /* Song Item */
-    .song-item {
-      padding: 2rem;
-      background: var(--surface);
-      border-radius: 4px;
-      margin-bottom: 1.5rem;
-      position: relative;
-    }
-
-    .song-item-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 1.5rem;
-    }
+    input:focus { border-color: var(--accent); }
+    input::placeholder { color: rgba(255,255,255,0.1); }
 
     /* Buttons */
     .btn {
-      padding: 0.75rem 1.25rem;
-      font-size: 13px;
-      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.25rem 2.5rem;
+      font-size: 14px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
       cursor: pointer;
       border: 1px solid var(--border);
       background: transparent;
       color: var(--text);
-      border-radius: 2px;
+      border-radius: 100px;
       transition: var(--transition);
     }
 
     .btn:hover {
-      background: var(--surface-hover);
-      border-color: var(--text);
+      background: var(--text);
+      color: var(--bg);
+      transform: translateY(-2px);
     }
 
-    .btn-primary {
+    .btn-accent {
       background: var(--accent);
-      color: var(--accent-text);
-      border-color: var(--accent);
+      color: #000;
+      border: none;
     }
 
-    .btn-primary:hover {
-      opacity: 0.9;
-      background: var(--accent);
+    .btn-accent:hover {
+      background: #fff;
+      box-shadow: 0 10px 30px rgba(0, 242, 255, 0.2);
     }
+
+    /* Song Item */
+    .song-item {
+      margin-bottom: 3rem;
+      padding-left: 2rem;
+      border-left: 1px solid var(--border);
+      position: relative;
+      animation: slideIn 0.5s ease forwards;
+    }
+
+    .song-item:hover { border-left-color: var(--accent); }
 
     .btn-remove {
+      position: absolute;
+      left: -10px;
+      top: 0;
+      background: var(--bg);
+      border: 1px solid var(--border);
       color: var(--text-muted);
-      border: none;
-      padding: 0;
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
-    .btn-remove:hover { color: var(--danger); background: none; }
+    .btn-remove:hover { color: var(--danger); border-color: var(--danger); }
 
     /* Output */
-    .output-sticky {
+    .output-card {
       position: sticky;
-      top: 3rem;
+      top: 2rem;
     }
 
-    .sql-code {
+    .sql-area {
       width: 100%;
-      height: 500px;
-      background: var(--surface);
-      color: var(--text);
+      height: 480px;
+      background: rgba(0,0,0,0.3);
       border: 1px solid var(--border);
+      border-radius: 12px;
       padding: 1.5rem;
+      color: var(--accent);
       font-family: var(--font-mono);
       font-size: 12px;
-      border-radius: 4px;
+      line-height: 1.6;
       resize: none;
       outline: none;
+      margin-top: 1rem;
     }
 
     #themeToggle {
       background: none;
       border: none;
       color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
       cursor: pointer;
-      font-size: 14px;
     }
 
-    /* Utils */
-    .full-width { grid-column: span 2; }
-    .mb-4 { margin-bottom: 1rem; }
+    /* Animations */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(20px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
 
-    @media (max-width: 900px) {
-      .app-grid { grid-template-columns: 1fr; gap: 3rem; }
-      .output-sticky { position: static; }
-      .form-row { grid-template-columns: 1fr; gap: 1rem; }
-      .full-width { grid-column: span 1; }
+    @media (max-width: 1000px) {
+      .app-wrapper { grid-template-columns: 1fr; }
+      .hero h1 { font-size: 3rem; }
+      .output-card { position: static; }
     }
   </style>
 </head>
 <body>
 
   <header class="container">
-    <div class="brand">Music Station.</div>
-    <button id="themeToggle">LIGHT MODE</button>
+    <div class="logo">STUDIO.</div>
+    <button id="themeToggle">APPEARANCE: DARK</button>
   </header>
 
   <main class="container">
-    <div class="app-grid">
-      <section>
-        <h1 class="section-title">SQL Generator</h1>
+    <section class="hero">
+      <h1>Batch SQL<br>Processor.</h1>
+    </section>
 
-        <div class="mb-4">
-          <span class="label">01. Genre Details</span>
-          <div class="form-row">
-            <div>
-              <input type="text" id="genreName" placeholder="Name">
-            </div>
-            <div>
-              <input type="text" id="genreSlug" placeholder="Slug">
-            </div>
+    <div class="app-wrapper">
+      <section>
+        <div class="input-group">
+          <span class="label">Primary Category</span>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+            <input type="text" id="genreName" placeholder="Genre Name">
+            <input type="text" id="genreSlug" placeholder="Slug">
           </div>
         </div>
 
-        <div class="mb-4">
-          <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1.5rem;">
-            <span class="label" style="margin: 0;">02. Tracklist</span>
-            <button class="btn" id="addSongBtn">+ Add</button>
+        <div class="input-group">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 3rem;">
+            <span class="label" style="margin: 0;">Track Entries</span>
+            <button class="btn" id="addSongBtn" style="padding: 0.6rem 1.5rem; font-size: 11px;">+ Add Track</button>
           </div>
 
-          <div id="songBuilder"></div>
+          <div id="songBuilder">
+            </div>
 
-          <div style="display: flex; gap: 1rem; margin-top: 3rem;">
-            <button class="btn btn-primary" id="generateSqlBtn" style="padding: 1rem 2rem;">GENERATE STATEMENT</button>
-            <button class="btn" id="resetBtn">RESET</button>
+          <div style="display: flex; gap: 1.5rem; margin-top: 4rem;">
+            <button class="btn btn-accent" id="generateSqlBtn">Execute & Generate</button>
+            <button class="btn" id="resetBtn">Clear All</button>
           </div>
         </div>
       </section>
 
       <aside>
-        <div class="output-sticky">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-            <span class="label" style="margin: 0;">SQL Output</span>
-            <button class="btn-remove" id="copyBtn" style="border: none;">Copy to clipboard</button>
+        <div class="glass-card output-card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <span class="label" style="margin: 0;">SQL Statement</span>
+            <button id="copyBtn" style="background:none; border:none; color:var(--accent); font-size: 11px; font-weight: 700; cursor:pointer;">COPY CODE</button>
           </div>
-          <textarea id="sqlOutput" class="sql-code" readonly placeholder="No output generated..."></textarea>
+          <textarea id="sqlOutput" class="sql-area" readonly placeholder="Waiting for input..."></textarea>
+          <p style="font-size: 10px; color: var(--text-muted); margin-top: 1.5rem; text-align: center;">Ready for Turso & SQLite Deployment</p>
         </div>
       </aside>
     </div>
@@ -269,31 +288,15 @@
 
   <template id="songItemTemplate">
     <div class="song-item">
-      <div class="song-item-header">
-        <span class="label" style="margin: 0; color: var(--text);">Track #<span class="count">1</span></span>
-        <button class="btn-remove song-remove-btn">Remove</button>
+      <button class="btn-remove song-remove-btn">×</button>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+        <input type="text" class="song-track-title" placeholder="Track Title">
+        <input type="text" class="song-track-artist" placeholder="Artist">
       </div>
-      <div class="form-row">
-        <div>
-          <label class="label">Title</label>
-          <input type="text" class="song-track-title">
-        </div>
-        <div>
-          <label class="label">Artist</label>
-          <input type="text" class="song-track-artist">
-        </div>
-        <div class="full-width">
-          <label class="label">URL</label>
-          <input type="url" class="song-track-url" placeholder="youtube.com/...">
-        </div>
-        <div>
-          <label class="label">Video ID</label>
-          <input type="text" class="song-track-video-id">
-        </div>
-        <div>
-          <label class="label">Order</label>
-          <input type="number" class="song-track-order">
-        </div>
+      <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 1.5rem;">
+        <input type="url" class="song-track-url" placeholder="YouTube URL">
+        <input type="text" class="song-track-video-id" placeholder="Video ID">
+        <input type="number" class="song-track-order" placeholder="Sort">
       </div>
     </div>
   </template>
@@ -312,84 +315,83 @@
       copyBtn: document.getElementById('copyBtn')
     };
 
-    let currentTheme = 'dark';
+    let theme = 'dark';
 
-    // Theme Switcher
+    // Theme Switch
     refs.themeToggle.addEventListener('click', () => {
-      currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
-      document.documentElement.setAttribute('data-theme', currentTheme);
-      refs.themeToggle.textContent = currentTheme === 'dark' ? 'LIGHT MODE' : 'DARK MODE';
+      theme = theme === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', theme);
+      refs.themeToggle.textContent = `APPEARANCE: ${theme.toUpperCase()}`;
     });
 
-    // Auto Slug
+    // Auto Slugify
     refs.genreName.addEventListener('input', (e) => {
-      refs.genreSlug.value = e.target.value.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
+      refs.genreSlug.value = e.target.value.toLowerCase()
+        .replace(/[^\w ]+/g, '')
+        .replace(/ +/g, '-');
     });
 
     function addSongItem() {
       const clone = refs.songItemTemplate.content.cloneNode(true);
-      const items = refs.songBuilder.querySelectorAll('.song-item').length + 1;
-      clone.querySelector('.count').textContent = items;
-      clone.querySelector('.song-track-order').value = items;
+      const itemsCount = refs.songBuilder.querySelectorAll('.song-item').length + 1;
+      
+      const orderInput = clone.querySelector('.song-track-order');
+      orderInput.value = itemsCount;
 
       const urlInput = clone.querySelector('.song-track-url');
       const idInput = clone.querySelector('.song-track-video-id');
 
       urlInput.addEventListener('input', (e) => {
-        const match = e.target.value.match(/(?:youtu\.be\/|youtube\.com\/(?:v\/|u\/\w\/|embed\/|watch\?v=|\&v=))([^#\&\?]*)/);
-        if (match && match[1].length === 11) idInput.value = match[1];
+        const id = e.target.value.match(/(?:youtu\.be\/|youtube\.com\/(?:v\/|u\/\w\/|embed\/|watch\?v=|\&v=))([^#\&\?]*)/);
+        if (id && id[1].length === 11) idInput.value = id[1];
       });
 
       clone.querySelector('.song-remove-btn').addEventListener('click', (e) => {
-        e.target.closest('.song-item').remove();
-        updateIndices();
+        e.target.closest('.song-item').style.opacity = '0';
+        setTimeout(() => e.target.closest('.song-item').remove(), 300);
       });
 
       refs.songBuilder.appendChild(clone);
-    }
-
-    function updateIndices() {
-      refs.songBuilder.querySelectorAll('.song-item').forEach((item, i) => {
-        item.querySelector('.count').textContent = i + 1;
-      });
     }
 
     function generateSql() {
       const gName = refs.genreName.value.trim().replace(/'/g, "''");
       const gSlug = refs.genreSlug.value.trim();
 
-      if (!gName) return alert('Fill genre name');
+      if (!gName) return alert('Input Category Name');
 
       let sql = `INSERT OR IGNORE INTO genres (name, slug) VALUES ('${gName}', '${gSlug}');\n\n`;
       
       const tracks = Array.from(refs.songBuilder.querySelectorAll('.song-item'));
       if (tracks.length > 0) {
-        sql += `INSERT INTO tracks (genre_id, title, artist, youtube_url, youtube_video_id, sort_order) VALUES\n`;
+        sql += `INSERT INTO tracks (genre_id, title, artist, youtube_url, youtube_video_id, sort_order)\nVALUES\n`;
         const values = tracks.map(t => {
           const title = t.querySelector('.song-track-title').value.replace(/'/g, "''");
           const artist = t.querySelector('.song-track-artist').value.replace(/'/g, "''");
           const url = t.querySelector('.song-track-url').value;
           const vid = t.querySelector('.song-track-video-id').value;
           const order = t.querySelector('.song-track-order').value;
-          return `((SELECT id FROM genres WHERE slug = '${gSlug}'), '${title}', '${artist}', '${url}', '${vid}', ${order})`;
+          return `  ((SELECT id FROM genres WHERE slug = '${gSlug}'), '${title}', '${artist}', '${url}', '${vid}', ${order})`;
         });
         sql += values.join(',\n') + ';';
       }
 
       refs.sqlOutput.value = sql;
+      refs.sqlOutput.style.borderColor = 'var(--accent)';
+      setTimeout(() => refs.sqlOutput.style.borderColor = 'var(--border)', 1000);
     }
 
     refs.addSongBtn.addEventListener('click', addSongItem);
     refs.generateSqlBtn.addEventListener('click', generateSql);
-    refs.resetBtn.addEventListener('click', () => confirm('Reset?') && location.reload());
+    refs.resetBtn.addEventListener('click', () => confirm('Wipe all data?') && location.reload());
     refs.copyBtn.addEventListener('click', () => {
       refs.sqlOutput.select();
       document.execCommand('copy');
-      refs.copyBtn.textContent = 'Copied';
-      setTimeout(() => refs.copyBtn.textContent = 'Copy to clipboard', 2000);
+      refs.copyBtn.textContent = 'COPIED!';
+      setTimeout(() => refs.copyBtn.textContent = 'COPY CODE', 2000);
     });
 
-    // Init
+    // Start with one item
     addSongItem();
   </script>
 </body>
