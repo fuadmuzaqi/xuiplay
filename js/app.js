@@ -14,7 +14,7 @@ const state = {
 const ICONS = {
   play: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>`,
   pause: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>`,
-  playing_gif: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h1m8-9v1m8 8h1m-9 8v1M5.6 5.6l.7.7m11.4 11.4l.7.7M5.6 18.4l.7-.7m11.4-11.4l.7-.7"/></svg>`
+  playing_icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h1m8-9v1m8 8h1m-9 8v1M5.6 5.6l.7.7m11.4 11.4l.7.7M5.6 18.4l.7-.7m11.4-11.4l.7-.7"/></svg>`
 };
 
 const refs = {
@@ -34,13 +34,13 @@ document.addEventListener("DOMContentLoaded", () => {
   applyTheme(state.theme);
   bindEvents();
   loadLibrary();
-  registerSW();
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(() => {});
 });
 
 function bindEvents() {
   refs.playPauseBtn.addEventListener("click", onPlayPause);
-  document.getElementById("prevBtn").addEventListener("click", playPrev);
-  document.getElementById("nextBtn").addEventListener("click", playNext);
+  document.getElementById("prevBtn").addEventListener("click", () => navigateTrack(-1));
+  document.getElementById("nextBtn").addEventListener("click", () => navigateTrack(1));
   refs.refreshBtn.addEventListener("click", () => location.reload());
   refs.clearCacheBtn.addEventListener("click", clearCache);
 
@@ -73,7 +73,7 @@ function bindEvents() {
 }
 
 function clearCache() {
-  if (confirm("Hapus cache dan reset?")) {
+  if (confirm("Hapus cache dan reset aplikasi?")) {
     localStorage.clear();
     caches.keys().then(names => names.forEach(n => caches.delete(n)));
     location.reload();
@@ -86,11 +86,11 @@ async function loadLibrary() {
     const data = await res.json();
     state.library = data.genres || [];
     if (state.library.length) {
-      state.activeGenreId = state.library[0].id;
+      state.activeGenreId = state.activeGenreId || state.library[0].id;
       renderGenres();
       renderPlaylist();
     }
-  } catch (e) { console.error("Library error"); }
+  } catch (e) { console.error("Library failed"); }
 }
 
 function renderGenres() {
@@ -109,6 +109,7 @@ window.switchGenre = (id) => {
 function renderPlaylist() {
   const genre = state.library.find(g => g.id === state.activeGenreId);
   const tracks = genre?.tracks || [];
+  document.getElementById("genreHeading").textContent = genre?.name || "Genre";
   document.getElementById("trackCount").textContent = `${tracks.length} track`;
 
   refs.playlistContainer.innerHTML = tracks.map((t, i) => {
@@ -121,7 +122,7 @@ function renderPlaylist() {
           <span class="track-artist">${t.artist || "Unknown"}</span>
         </div>
         <div class="track-icon-wrap">
-          ${isActive && state.isPlaying ? ICONS.playing_gif : ICONS.play}
+          ${isActive && state.isPlaying ? ICONS.playing_icon : ICONS.play}
         </div>
       </button>
     `;
@@ -131,6 +132,8 @@ function renderPlaylist() {
 window.selectTrack = async (index) => {
   const genre = state.library.find(g => g.id === state.activeGenreId);
   const track = genre.tracks[index];
+  if (!track) return;
+
   state.activeTrack = track;
   state.activeTrackIndex = index;
   document.getElementById("nowTitle").textContent = track.title;
@@ -157,11 +160,20 @@ function createPlayer(videoId) {
         state.isPlaying = (e.data === YT.PlayerState.PLAYING);
         refs.playPauseBtn.innerHTML = state.isPlaying ? ICONS.pause : ICONS.play;
         if (state.isPlaying) startTimer();
-        if (e.data === YT.PlayerState.ENDED) playNext();
+        if (e.data === YT.PlayerState.ENDED) navigateTrack(1);
         renderPlaylist();
       }
     }
   });
+}
+
+function navigateTrack(dir) {
+  const genre = state.library.find(g => g.id === state.activeGenreId);
+  if (!genre) return;
+  let nextIndex = state.activeTrackIndex + dir;
+  if (nextIndex >= genre.tracks.length) nextIndex = 0;
+  if (nextIndex < 0) nextIndex = genre.tracks.length - 1;
+  selectTrack(nextIndex);
 }
 
 function startTimer() {
@@ -185,14 +197,8 @@ function formatTime(s) {
 }
 
 function onPlayPause() { if(state.player) state.isPlaying ? state.player.pauseVideo() : state.player.playVideo(); }
-function playNext() { /* Logika Next */ }
-function playPrev() { /* Logika Prev */ }
 
 function applyTheme(t) {
   document.documentElement.setAttribute("data-theme", t);
   refs.themeToggle.innerHTML = t === "dark" ? "☀" : "☾";
-}
-
-function registerSW() {
-  if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(() => {});
 }
