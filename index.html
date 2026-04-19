@@ -3,65 +3,76 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Music Station | Premium Player</title>
-  
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@300;400;600&display=swap" rel="stylesheet">
-  
+  <title>Music Station</title>
+
+  <link rel="preconnect" href="https://api.fontshare.com">
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&f[]=boska@400,500,700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./css/styles.css">
 </head>
 <body>
   <header class="topbar">
     <div class="brand">
-      <div class="logo-mark"></div>
+      <div class="logo">♪</div>
       <h1>Music<span>Station</span></h1>
     </div>
-    <button id="themeToggle" class="theme-btn">☀</button>
+    <div class="topbar-actions">
+      <button class="icon-btn" id="eqToggleBtn" type="button" aria-expanded="false" title="Equalizer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 21v-7M4 10V3M12 21v-4M12 10V3M20 21v-9M20 5V3M2 10h4M10 10h4M18 12h4"/></svg>
+      </button>
+      <button class="icon-btn" id="themeToggle" type="button">☀</button>
+    </div>
   </header>
 
-  <main class="app-container">
+  <main class="main-shell">
     <section class="player-card">
-      <div class="display-zone">
-        <h2 id="nowTitle">Ready to Play</h2>
-        <p id="nowArtist" class="artist-name">Pilih lagu dari playlist</p>
+      <div class="now-playing">
+        <h2 id="nowTitle">Pilih Lagu</h2>
+        <p id="nowArtist" class="muted">Pilih daftar di bawah</p>
       </div>
 
       <div class="scrubber-container">
-        <div class="time-info">
+        <div class="time-labels">
           <span id="currentTime">0:00</span>
           <span id="durationTime">0:00</span>
         </div>
         <input type="range" id="timeBar" value="0" min="0" max="100" step="0.1">
       </div>
 
-      <div class="main-controls">
-        <button id="prevBtn" class="nav-btn">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
-        </button>
-        <button id="playPauseBtn" class="master-play">▶</button>
-        <button id="nextBtn" class="nav-btn">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6h2v12h-2z"/></svg>
-        </button>
+      <div class="controls">
+        <button id="prevBtn" class="control-btn">⏮</button>
+        <button id="playPauseBtn" class="play-btn">▶</button>
+        <button id="nextBtn" class="control-btn">⏭</button>
       </div>
+
+      <aside class="eq-panel" id="eqPanel" hidden>
+        <div class="eq-header">
+          <h3>Equalizer</h3>
+          <div class="preset-group">
+            <button class="preset-btn active" data-preset="flat">Flat</button>
+            <button class="preset-btn" data-preset="warm">Warm</button>
+            <button class="preset-btn" data-preset="club">Club</button>
+          </div>
+        </div>
+        <div class="eq-sliders" id="eqSliders"></div>
+        <div id="eqVisualizer" style="display: none;"></div>
+      </aside>
     </section>
 
-    <section class="content-card">
-      <nav class="genre-wrapper">
-        <div id="genreTabs" class="genre-list"></div>
+    <section class="playlist-card">
+      <nav class="genre-container">
+        <div id="genreTabs" class="genre-tabs"></div>
       </nav>
 
-      <div class="list-meta">
-        <h3 id="genreHeading">Semua Lagu</h3>
-        <span id="trackCount">0 tracks</span>
+      <div class="playlist-header">
+        <h3 id="genreHeading">Playlist</h3>
+        <span id="trackCount" class="badge">0 track</span>
       </div>
 
-      <div id="playlistContainer" class="tracks-stack">
-        </div>
+      <div id="playlistContainer" class="playlist-list"></div>
     </section>
   </main>
 
-  <div id="youtube-player" class="yt-engine"></div>
+  <div id="youtube-player" class="yt-hidden"></div>
 
   <script src="./js/app.js"></script>
 </body>
