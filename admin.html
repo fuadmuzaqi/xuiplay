@@ -1,897 +1,112 @@
 <!DOCTYPE html>
-<html lang="id" data-theme="light">
+<html lang="id">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Admin SQL Tutorial - Music Station</title>
+  <title>Music Station</title>
 
-  <link rel="preconnect" href="https://api.fontshare.com" />
-  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&f[]=boska@400,500,700&display=swap" rel="stylesheet" />
-
-  <style>
-    :root,
-    [data-theme="light"] {
-      --text-xs: clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem);
-      --text-sm: clamp(0.875rem, 0.8rem + 0.35vw, 1rem);
-      --text-base: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);
-      --text-lg: clamp(1.125rem, 1rem + 0.75vw, 1.5rem);
-      --text-xl: clamp(1.5rem, 1.2rem + 1.25vw, 2rem);
-
-      --space-1: 0.25rem;
-      --space-2: 0.5rem;
-      --space-3: 0.75rem;
-      --space-4: 1rem;
-      --space-5: 1.25rem;
-      --space-6: 1.5rem;
-      --space-8: 2rem;
-      --space-10: 2.5rem;
-      --space-12: 3rem;
-
-      --color-bg: #f7f6f2;
-      --color-surface: #fcfbf8;
-      --color-surface-2: #f4f1eb;
-      --color-border: rgba(40, 37, 29, 0.12);
-      --color-text: #28251d;
-      --color-text-muted: #706b61;
-      --color-primary: #01696f;
-      --color-primary-hover: #0c4e54;
-      --color-accent: #a12c7b;
-      --color-success: #437a22;
-      --radius-md: 0.875rem;
-      --radius-lg: 1.25rem;
-      --radius-xl: 1.75rem;
-      --radius-full: 999px;
-      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-      --shadow-lg: 0 16px 42px rgba(0, 0, 0, 0.08);
-      --font-display: "Boska", Georgia, serif;
-      --font-body: "Satoshi", system-ui, sans-serif;
-    }
-
-    [data-theme="dark"] {
-      --color-bg: #171614;
-      --color-surface: #1d1c1a;
-      --color-surface-2: #252320;
-      --color-border: rgba(255, 255, 255, 0.11);
-      --color-text: #ece6db;
-      --color-text-muted: #ada698;
-      --color-primary: #4f98a3;
-      --color-primary-hover: #76b2bb;
-      --color-accent: #de6cae;
-      --color-success: #80c758;
-      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
-      --shadow-lg: 0 18px 48px rgba(0, 0, 0, 0.34);
-    }
-
-    * { box-sizing: border-box; }
-    html { scroll-behavior: smooth; }
-    body {
-      margin: 0;
-      font-family: var(--font-body);
-      font-size: var(--text-base);
-      line-height: 1.6;
-      color: var(--color-text);
-      background:
-        radial-gradient(circle at top left, rgba(1, 105, 111, 0.12), transparent 24%),
-        radial-gradient(circle at top right, rgba(161, 44, 123, 0.10), transparent 18%),
-        var(--color-bg);
-    }
-
-    a { color: inherit; text-decoration: none; }
-    button, input, select { font: inherit; }
-    code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
-
-    .skip-link {
-      position: absolute;
-      left: -9999px;
-      top: auto;
-    }
-    .skip-link:focus {
-      left: 1rem;
-      top: 1rem;
-      z-index: 100;
-      background: var(--color-primary);
-      color: #fff;
-      padding: 0.8rem 1rem;
-      border-radius: 0.75rem;
-    }
-
-    .topbar {
-      position: sticky;
-      top: 0;
-      z-index: 40;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: var(--space-4);
-      padding: var(--space-4) var(--space-5);
-      backdrop-filter: blur(14px);
-      background: color-mix(in srgb, var(--color-bg) 84%, transparent);
-      border-bottom: 1px solid var(--color-border);
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: var(--space-4);
-    }
-
-    .logo {
-      width: 48px;
-      height: 48px;
-      border-radius: 1rem;
-      background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
-      display: grid;
-      place-items: center;
-      color: #fff;
-      box-shadow: var(--shadow-sm);
-      font-weight: 700;
-    }
-
-    .eyebrow {
-      margin: 0 0 0.15rem;
-      font-size: var(--text-xs);
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      color: var(--color-text-muted);
-    }
-
-    .brand h1 {
-      margin: 0;
-      font-family: var(--font-display);
-      font-size: var(--text-xl);
-      line-height: 1;
-    }
-
-    .top-actions {
-      display: flex;
-      gap: var(--space-3);
-      align-items: center;
-      flex-wrap: wrap;
-    }
-
-    .btn,
-    .theme-btn,
-    .copy-btn,
-    .quick-link {
-      min-height: 44px;
-      border-radius: var(--radius-full);
-      border: 1px solid var(--color-border);
-      background: var(--color-surface);
-      color: var(--color-text);
-      padding: 0.8rem 1rem;
-      cursor: pointer;
-      transition: 180ms ease;
-    }
-
-    .btn:hover,
-    .theme-btn:hover,
-    .copy-btn:hover,
-    .quick-link:hover {
-      transform: translateY(-1px);
-      background: var(--color-surface-2);
-    }
-
-    .btn.primary {
-      background: var(--color-primary);
-      color: #fff;
-      border-color: transparent;
-    }
-
-    .btn.primary:hover {
-      background: var(--color-primary-hover);
-    }
-
-    .page {
-      width: min(1180px, calc(100% - 2rem));
-      margin: 0 auto;
-      padding: var(--space-6) 0 var(--space-10);
-      display: grid;
-      gap: var(--space-5);
-    }
-
-    .hero,
-    .card,
-    .note,
-    .sidebar-card {
-      background: color-mix(in srgb, var(--color-surface) 90%, transparent);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-xl);
-      box-shadow: var(--shadow-lg);
-    }
-
-    .hero {
-      padding: var(--space-6);
-      display: grid;
-      grid-template-columns: 1.2fr 0.8fr;
-      gap: var(--space-5);
-      overflow: hidden;
-      position: relative;
-    }
-
-    .hero::after {
-      content: "";
-      position: absolute;
-      right: -4rem;
-      bottom: -4rem;
-      width: 16rem;
-      height: 16rem;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(1,105,111,0.22), transparent 65%);
-      pointer-events: none;
-    }
-
-    .hero h2 {
-      margin: 0 0 var(--space-3);
-      font-family: var(--font-display);
-      font-size: clamp(2rem, 1.3rem + 2.2vw, 3.6rem);
-      line-height: 1.02;
-      max-width: 12ch;
-    }
-
-    .hero p {
-      margin: 0 0 var(--space-4);
-      color: var(--color-text-muted);
-      max-width: 62ch;
-    }
-
-    .hero-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: var(--space-3);
-    }
-
-    .hero-panel {
-      display: grid;
-      gap: var(--space-3);
-      align-content: start;
-    }
-
-    .stat-box {
-      padding: var(--space-4);
-      background: var(--color-surface-2);
-      border-radius: var(--radius-lg);
-      border: 1px solid var(--color-border);
-    }
-
-    .layout {
-      display: grid;
-      grid-template-columns: 280px minmax(0, 1fr);
-      gap: var(--space-5);
-      align-items: start;
-    }
-
-    .sidebar-card {
-      padding: var(--space-4);
-      position: sticky;
-      top: 6.5rem;
-    }
-
-    .sidebar-card h3 {
-      margin: 0 0 var(--space-3);
-      font-size: 1rem;
-    }
-
-    .toc {
-      display: grid;
-      gap: var(--space-2);
-    }
-
-    .quick-link {
-      text-align: left;
-      display: block;
-      border-radius: var(--radius-md);
-      background: var(--color-surface-2);
-      padding: 0.85rem 1rem;
-      min-height: auto;
-    }
-
-    .content {
-      display: grid;
-      gap: var(--space-5);
-    }
-
-    .card {
-      padding: var(--space-5);
-    }
-
-    .card h3 {
-      margin: 0 0 var(--space-2);
-      font-size: var(--text-lg);
-    }
-
-    .card p {
-      margin: 0 0 var(--space-4);
-      color: var(--color-text-muted);
-    }
-
-    .note {
-      padding: var(--space-4);
-      background: linear-gradient(135deg, color-mix(in srgb, var(--color-primary) 10%, var(--color-surface)), var(--color-surface));
-    }
-
-    .note strong {
-      color: var(--color-text);
-    }
-
-    .terminal,
-    .sql-block {
-      position: relative;
-      border-radius: var(--radius-lg);
-      overflow: hidden;
-      border: 1px solid var(--color-border);
-      background: #111;
-      color: #e9f2ef;
-    }
-
-    [data-theme="light"] .terminal,
-    [data-theme="light"] .sql-block {
-      background: #171717;
-    }
-
-    .code-head {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: var(--space-3);
-      padding: 0.8rem 1rem;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-      background: rgba(255,255,255,0.04);
-    }
-
-    .code-head span {
-      font-size: var(--text-sm);
-      color: #cfe1dc;
-    }
-
-    .copy-btn {
-      min-height: auto;
-      padding: 0.5rem 0.85rem;
-      font-size: var(--text-sm);
-      background: rgba(255,255,255,0.08);
-      color: #fff;
-      border: 1px solid rgba(255,255,255,0.12);
-    }
-
-    pre {
-      margin: 0;
-      padding: 1rem 1rem 1.2rem;
-      overflow: auto;
-      font-size: 0.92rem;
-      line-height: 1.55;
-      white-space: pre;
-    }
-
-    .grid-2 {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: var(--space-4);
-    }
-
-    .mini-card {
-      background: var(--color-surface-2);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-lg);
-      padding: var(--space-4);
-    }
-
-    .mini-card h4 {
-      margin: 0 0 var(--space-2);
-      font-size: 1rem;
-    }
-
-    .steps {
-      margin: 0;
-      padding-left: 1.2rem;
-      color: var(--color-text-muted);
-    }
-
-    .steps li + li {
-      margin-top: 0.45rem;
-    }
-
-    .tips {
-      margin: 0;
-      padding-left: 1.1rem;
-      color: var(--color-text-muted);
-    }
-
-    .tips li + li {
-      margin-top: 0.4rem;
-    }
-
-    .footer-box {
-      padding: var(--space-4);
-      border-radius: var(--radius-lg);
-      background: var(--color-surface-2);
-      border: 1px solid var(--color-border);
-      color: var(--color-text-muted);
-    }
-
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      padding: 0.45rem 0.8rem;
-      border-radius: var(--radius-full);
-      background: color-mix(in srgb, var(--color-primary) 12%, var(--color-surface));
-      color: var(--color-primary);
-      border: 1px solid color-mix(in srgb, var(--color-primary) 24%, transparent);
-      font-size: var(--text-sm);
-      margin-bottom: var(--space-3);
-    }
-
-    .ok {
-      color: var(--color-success);
-      font-weight: 700;
-    }
-
-    @media (max-width: 960px) {
-      .hero,
-      .layout,
-      .grid-2 {
-        grid-template-columns: 1fr;
-      }
-
-      .sidebar-card {
-        position: static;
-      }
-    }
-
-    @media (max-width: 640px) {
-      .topbar {
-        padding-inline: 1rem;
-      }
-
-      .page {
-        width: min(100% - 1rem, 1180px);
-        padding-top: 1rem;
-      }
-
-      .hero,
-      .card,
-      .sidebar-card {
-        padding: 1rem;
-      }
-
-      .hero h2 {
-        max-width: none;
-      }
-
-      pre {
-        font-size: 0.84rem;
-      }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after {
-        animation-duration: 0.01ms !important;
-        transition-duration: 0.01ms !important;
-        scroll-behavior: auto !important;
-      }
-    }
-  </style>
+  <link rel="preconnect" href="https://api.fontshare.com">
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&f[]=boska@400,500,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/styles.css" />
 </head>
 <body>
   <a class="skip-link" href="#main-content">Lewati ke konten</a>
 
   <header class="topbar">
-    <div class="brand">
-      <div class="logo">SQL</div>
+    <div class="brand-wrap">
+      <div class="brand-mark" aria-hidden="true">♪</div>
       <div>
-        <p class="eyebrow">Music Station Admin</p>
-        <h1>Tutorial SQL Turso</h1>
+        <p class="eyebrow">Music player</p>
+        <h1 class="brand-title">Music Station</h1>
       </div>
     </div>
 
-    <div class="top-actions">
-      <a class="btn" href="./index.html">Player</a>
-      <button class="theme-btn" type="button" id="themeToggle" aria-label="Ganti tema">☾</button>
+    <div class="topbar-actions">
+      <button class="icon-btn" id="eqToggleBtn" type="button" aria-label="Buka equalizer" aria-expanded="false" title="Equalizer">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4 21v-7"></path>
+          <path d="M4 10V3"></path>
+          <path d="M12 21v-4"></path>
+          <path d="M12 10V3"></path>
+          <path d="M20 21v-9"></path>
+          <path d="M20 5V3"></path>
+          <path d="M2 10h4"></path>
+          <path d="M10 10h4"></path>
+          <path d="M18 12h4"></path>
+        </svg>
+      </button>
+
+      <button class="icon-btn" id="themeToggle" type="button" aria-label="Ganti tema" title="Ganti tema">☾</button>
     </div>
   </header>
 
-  <main id="main-content" class="page">
-    <section class="hero">
-      <div>
-        <div class="badge">Manual admin via SQL</div>
-        <h2>Tambah, edit, dan hapus genre & lagu langsung dari Turso</h2>
-        <p>Halaman ini menggantikan form admin lama dan dijadikan panduan praktis untuk mengelola data musik lewat query SQL.</p>
-        <div class="hero-actions">
-          <a class="btn primary" href="#langkah-awal">Mulai dari shell</a>
-          <a class="btn" href="#tambah-lagu">Lihat contoh INSERT</a>
+  <main id="main-content" class="main-shell">
+    <section class="player-card">
+      <div class="now-block">
+        <p class="eyebrow">Now playing</p>
+        <h2 id="nowTitle">Belum ada lagu dipilih</h2>
+        <p id="nowArtist" class="muted">Pilih lagu dari daftar di bawah</p>
+      </div>
+
+      <nav class="genre-inline" aria-label="Folder genre">
+        <div id="genreTabs" class="genre-tabs"></div>
+      </nav>
+
+      <div class="time-wrap">
+        <input
+          id="progressBar"
+          class="time-bar"
+          type="range"
+          min="0"
+          max="100"
+          value="0"
+          step="0.1"
+          aria-label="Posisi lagu"
+        />
+        <div class="time-meta">
+          <span id="currentTime">0:00</span>
+          <span id="durationTime">0:00</span>
         </div>
       </div>
 
-      <div class="hero-panel">
-        <div class="stat-box">
-          <p class="eyebrow">Command utama</p>
-          <strong>turso db shell nama-database</strong>
-        </div>
-        <div class="stat-box">
-          <p class="eyebrow">Operasi data</p>
-          <strong>INSERT · UPDATE · DELETE</strong>
-        </div>
-        <div class="stat-box">
-          <p class="eyebrow">Tabel</p>
-          <strong>genres · tracks</strong>
-        </div>
+      <div class="transport">
+        <button id="prevBtn" class="transport-btn" type="button" aria-label="Lagu sebelumnya">⏮</button>
+        <button id="playPauseBtn" class="play-btn" type="button" aria-label="Play atau pause">▶</button>
+        <button id="nextBtn" class="transport-btn" type="button" aria-label="Lagu berikutnya">⏭</button>
       </div>
+
+      <aside class="eq-panel" id="eqPanel" hidden>
+        <div class="eq-head">
+          <div>
+            <p class="eyebrow">Equalizer</p>
+            <h3>Preset visual</h3>
+          </div>
+          <div class="preset-pills">
+            <button class="preset-btn active" data-preset="flat" type="button">Flat</button>
+            <button class="preset-btn" data-preset="warm" type="button">Warm</button>
+            <button class="preset-btn" data-preset="club" type="button">Club</button>
+          </div>
+        </div>
+
+        <div class="eq-sliders" id="eqSliders"></div>
+      </aside>
     </section>
 
-    <section class="layout">
-      <aside class="sidebar-card">
-        <h3>Navigasi cepat</h3>
-        <nav class="toc" aria-label="Daftar isi tutorial">
-          <a class="quick-link" href="#langkah-awal">1. Masuk shell</a>
-          <a class="quick-link" href="#lihat-data">2. Lihat data</a>
-          <a class="quick-link" href="#tambah-genre">3. Tambah genre</a>
-          <a class="quick-link" href="#tambah-lagu">4. Tambah lagu</a>
-          <a class="quick-link" href="#edit-genre">5. Edit genre</a>
-          <a class="quick-link" href="#edit-lagu">6. Edit lagu</a>
-          <a class="quick-link" href="#hapus-lagu">7. Hapus lagu</a>
-          <a class="quick-link" href="#hapus-genre">8. Hapus genre</a>
-          <a class="quick-link" href="#tips-aman">9. Tips aman</a>
-        </nav>
-      </aside>
-
-      <div class="content">
-        <section class="card" id="langkah-awal">
-          <h3>1. Masuk ke Turso shell</h3>
-          <p>Turso CLI menyediakan shell interaktif dan juga bisa mengeksekusi SQL langsung dari command line, jadi ini adalah cara paling cepat untuk mengelola data manual. [web:30][web:31]</p>
-
-          <div class="terminal">
-            <div class="code-head">
-              <span>Terminal</span>
-              <button class="copy-btn" data-copy="cmd-shell">Copy</button>
-            </div>
-            <pre id="cmd-shell">turso db shell nama-database-kamu</pre>
-          </div>
-        </section>
-
-        <section class="card" id="lihat-data">
-          <h3>2. Lihat schema dan isi data</h3>
-          <p>Shell Turso mendukung dot command seperti `.schema` dan `.dump`, sehingga kamu bisa cek struktur database sebelum mengubah data. [web:30][web:35]</p>
-
-          <div class="grid-2">
-            <div class="sql-block">
-              <div class="code-head">
-                <span>Cek schema</span>
-                <button class="copy-btn" data-copy="sql-schema">Copy</button>
-              </div>
-              <pre id="sql-schema">.schema</pre>
-            </div>
-
-            <div class="sql-block">
-              <div class="code-head">
-                <span>Lihat data genre</span>
-                <button class="copy-btn" data-copy="sql-check-genres">Copy</button>
-              </div>
-              <pre id="sql-check-genres">SELECT id, name, slug, created_at
-FROM genres
-ORDER BY name ASC;</pre>
-            </div>
-          </div>
-
-          <div class="sql-block" style="margin-top:1rem;">
-            <div class="code-head">
-              <span>Lihat data lagu</span>
-              <button class="copy-btn" data-copy="sql-check-tracks">Copy</button>
-            </div>
-            <pre id="sql-check-tracks">SELECT
-  id,
-  genre_id,
-  title,
-  artist,
-  youtube_video_id,
-  sort_order
-FROM tracks
-ORDER BY genre_id, sort_order, id;</pre>
-          </div>
-        </section>
-
-        <section class="card" id="tambah-genre">
-          <h3>3. Tambah genre</h3>
-          <p>Untuk menambah data baru, gunakan `INSERT INTO`, karena operasi `INSERT` dipakai untuk menambahkan row baru pada SQLite/libSQL. [web:78]</p>
-
-          <div class="sql-block">
-            <div class="code-head">
-              <span>Tambah satu genre</span>
-              <button class="copy-btn" data-copy="sql-insert-genre">Copy</button>
-            </div>
-            <pre id="sql-insert-genre">INSERT INTO genres (name, slug)
-VALUES ('Koplo', 'koplo');</pre>
-          </div>
-
-          <div class="note" style="margin-top:1rem;">
-            <strong>Tip:</strong> Kalau genre mungkin sudah ada, kamu bisa gunakan `INSERT OR IGNORE` agar query tidak gagal saat nilai unik sudah tersimpan.
-          </div>
-
-          <div class="sql-block" style="margin-top:1rem;">
-            <div class="code-head">
-              <span>Versi aman</span>
-              <button class="copy-btn" data-copy="sql-insert-genre-safe">Copy</button>
-            </div>
-            <pre id="sql-insert-genre-safe">INSERT OR IGNORE INTO genres (name, slug)
-VALUES ('Koplo', 'koplo');</pre>
-          </div>
-        </section>
-
-        <section class="card" id="tambah-lagu">
-          <h3>4. Tambah lagu ke genre</h3>
-          <p>Untuk memasukkan lagu, kamu tetap memakai `INSERT`, lalu menghubungkan lagu ke genre melalui `genre_id`. Operasi insert dan update data seperti ini adalah pola standar di SQLite/libSQL. [web:78][web:81]</p>
-
-          <div class="sql-block">
-            <div class="code-head">
-              <span>Tambah satu lagu ke genre Koplo</span>
-              <button class="copy-btn" data-copy="sql-insert-track">Copy</button>
-            </div>
-            <pre id="sql-insert-track">INSERT INTO tracks (
-  genre_id,
-  title,
-  artist,
-  youtube_url,
-  youtube_video_id,
-  cover_url,
-  accent_color,
-  sort_order
-) VALUES (
-  (SELECT id FROM genres WHERE slug = 'koplo'),
-  'GADIS MANIS KALIMANTAN',
-  'LAILA AYU - SIMPATIK MUSIC',
-  'https://www.youtube.com/watch?v=0CRHQwNJW1c',
-  '0CRHQwNJW1c',
-  'https://i.ytimg.com/vi/0CRHQwNJW1c/hqdefault.jpg',
-  '#01696f',
-  1
-);</pre>
-          </div>
-
-          <div class="sql-block" style="margin-top:1rem;">
-            <div class="code-head">
-              <span>Tambah banyak lagu sekaligus</span>
-              <button class="copy-btn" data-copy="sql-bulk-track">Copy</button>
-            </div>
-            <pre id="sql-bulk-track">INSERT INTO tracks (
-  genre_id,
-  title,
-  artist,
-  youtube_url,
-  youtube_video_id,
-  cover_url,
-  accent_color,
-  sort_order
-) VALUES
-(
-  (SELECT id FROM genres WHERE slug = 'koplo'),
-  'GADIS MANIS KALIMANTAN',
-  'LAILA AYU - SIMPATIK MUSIC',
-  'https://www.youtube.com/watch?v=0CRHQwNJW1c',
-  '0CRHQwNJW1c',
-  'https://i.ytimg.com/vi/0CRHQwNJW1c/hqdefault.jpg',
-  '#01696f',
-  1
-),
-(
-  (SELECT id FROM genres WHERE slug = 'koplo'),
-  'Kirang',
-  'Nayla Fardila / Putri Fedya',
-  'https://www.youtube.com/watch?v=_VQ0Ei63MlU',
-  '_VQ0Ei63MlU',
-  'https://i.ytimg.com/vi/_VQ0Ei63MlU/hqdefault.jpg',
-  '#7a39bb',
-  2
-),
-(
-  (SELECT id FROM genres WHERE slug = 'koplo'),
-  'Sabar',
-  'Silvy Kumalasari Feat Sadewok',
-  'https://www.youtube.com/watch?v=FTvPxO1Hfuo',
-  'FTvPxO1Hfuo',
-  'https://i.ytimg.com/vi/FTvPxO1Hfuo/hqdefault.jpg',
-  '#da7101',
-  3
-);</pre>
-          </div>
-        </section>
-
-        <section class="card" id="edit-genre">
-          <h3>5. Edit genre</h3>
-          <p>Untuk mengubah data yang sudah ada, gunakan `UPDATE` dengan `WHERE` agar hanya row tertentu yang berubah. Struktur `UPDATE` pada SQLite terdiri dari memilih tabel, menetapkan nilai baru, lalu menentukan kriteria baris yang ingin diubah. [web:81]</p>
-
-          <div class="grid-2">
-            <div class="sql-block">
-              <div class="code-head">
-                <span>Ganti nama genre</span>
-                <button class="copy-btn" data-copy="sql-update-genre-name">Copy</button>
-              </div>
-              <pre id="sql-update-genre-name">UPDATE genres
-SET name = 'Koplo Jawa'
-WHERE slug = 'koplo';</pre>
-            </div>
-
-            <div class="sql-block">
-              <div class="code-head">
-                <span>Ganti slug genre</span>
-                <button class="copy-btn" data-copy="sql-update-genre-slug">Copy</button>
-              </div>
-              <pre id="sql-update-genre-slug">UPDATE genres
-SET slug = 'koplo-jawa'
-WHERE slug = 'koplo';</pre>
-            </div>
-          </div>
-        </section>
-
-        <section class="card" id="edit-lagu">
-          <h3>6. Edit lagu</h3>
-          <p>Kamu bisa mengubah judul, artist, urutan, warna, atau bahkan memindahkan lagu ke genre lain dengan `UPDATE`. Selama memakai `WHERE`, perubahan hanya menyasar record yang cocok. [web:81]</p>
-
-          <div class="grid-2">
-            <div class="sql-block">
-              <div class="code-head">
-                <span>Edit judul dan artist</span>
-                <button class="copy-btn" data-copy="sql-update-track-basic">Copy</button>
-              </div>
-              <pre id="sql-update-track-basic">UPDATE tracks
-SET
-  title = 'Kirang (Live Koplo)',
-  artist = 'Putri Fedya'
-WHERE youtube_video_id = '_VQ0Ei63MlU';</pre>
-            </div>
-
-            <div class="sql-block">
-              <div class="code-head">
-                <span>Edit urutan tampil</span>
-                <button class="copy-btn" data-copy="sql-update-track-order">Copy</button>
-              </div>
-              <pre id="sql-update-track-order">UPDATE tracks
-SET sort_order = 1
-WHERE youtube_video_id = 'FTvPxO1Hfuo';</pre>
-            </div>
-          </div>
-
-          <div class="sql-block" style="margin-top:1rem;">
-            <div class="code-head">
-              <span>Pindahkan lagu ke genre lain</span>
-              <button class="copy-btn" data-copy="sql-move-track">Copy</button>
-            </div>
-            <pre id="sql-move-track">UPDATE tracks
-SET genre_id = (SELECT id FROM genres WHERE slug = 'dangdut')
-WHERE youtube_video_id = 'jcIsdKJWphs';</pre>
-          </div>
-        </section>
-
-        <section class="card" id="hapus-lagu">
-          <h3>7. Hapus lagu</h3>
-          <p>Gunakan `DELETE FROM ... WHERE ...` untuk menghapus record tertentu, karena `DELETE` dipakai menghapus baris yang ada dari tabel. [web:78][web:76]</p>
-
-          <div class="grid-2">
-            <div class="sql-block">
-              <div class="code-head">
-                <span>Hapus berdasarkan ID</span>
-                <button class="copy-btn" data-copy="sql-delete-track-id">Copy</button>
-              </div>
-              <pre id="sql-delete-track-id">DELETE FROM tracks
-WHERE id = 12;</pre>
-            </div>
-
-            <div class="sql-block">
-              <div class="code-head">
-                <span>Hapus berdasarkan video ID</span>
-                <button class="copy-btn" data-copy="sql-delete-track-video">Copy</button>
-              </div>
-              <pre id="sql-delete-track-video">DELETE FROM tracks
-WHERE youtube_video_id = 'VmYl-hjwHBw';</pre>
-            </div>
-          </div>
-        </section>
-
-        <section class="card" id="hapus-genre">
-          <h3>8. Hapus genre</h3>
-          <p>Hapus genre hanya setelah memastikan data lagu terkait sudah aman, karena penghapusan data biasanya dilakukan dengan `DELETE` pada baris yang cocok lewat klausa `WHERE`. [web:78]</p>
-
-          <div class="sql-block">
-            <div class="code-head">
-              <span>Hapus semua lagu dalam genre lebih dulu</span>
-              <button class="copy-btn" data-copy="sql-delete-tracks-by-genre">Copy</button>
-            </div>
-            <pre id="sql-delete-tracks-by-genre">DELETE FROM tracks
-WHERE genre_id = (SELECT id FROM genres WHERE slug = 'koplo');</pre>
-          </div>
-
-          <div class="sql-block" style="margin-top:1rem;">
-            <div class="code-head">
-              <span>Lalu hapus genre</span>
-              <button class="copy-btn" data-copy="sql-delete-genre">Copy</button>
-            </div>
-            <pre id="sql-delete-genre">DELETE FROM genres
-WHERE slug = 'koplo';</pre>
-          </div>
-        </section>
-
-        <section class="card" id="tips-aman">
-          <h3>9. Tips aman sebelum eksekusi</h3>
-          <p>Turso shell juga mendukung dump database ke file SQL dan memuat dump kembali, jadi sebelum edit besar sebaiknya backup dulu. [web:30]</p>
-
-          <div class="grid-2">
-            <div class="mini-card">
-              <h4>Backup database</h4>
-              <div class="terminal">
-                <div class="code-head">
-                  <span>Backup</span>
-                  <button class="copy-btn" data-copy="cmd-backup">Copy</button>
-                </div>
-                <pre id="cmd-backup">turso db shell nama-database-kamu .dump &gt; backup.sql</pre>
-              </div>
-            </div>
-
-            <div class="mini-card">
-              <h4>Restore dari dump</h4>
-              <div class="terminal">
-                <div class="code-head">
-                  <span>Restore</span>
-                  <button class="copy-btn" data-copy="cmd-restore">Copy</button>
-                </div>
-                <pre id="cmd-restore">turso db shell nama-database-kamu &lt; backup.sql</pre>
-              </div>
-            </div>
-          </div>
-
-          <div class="footer-box" style="margin-top:1rem;">
-            <ul class="tips">
-              <li>Cek dulu row yang mau diubah dengan `SELECT`.</li>
-              <li>Gunakan `WHERE` saat `UPDATE` dan `DELETE`.</li>
-              <li>Backup dulu sebelum bulk edit.</li>
-              <li>Gunakan `youtube_video_id` sebagai acuan cepat saat cari lagu.</li>
-            </ul>
-          </div>
-        </section>
-
-        <section class="card">
-          <h3>Contoh alur tercepat</h3>
-          <ol class="steps">
-            <li>Masuk ke shell dengan `turso db shell nama-database-kamu`.</li>
-            <li>Jalankan `SELECT id, name, slug FROM genres;` untuk cek genre.</li>
-            <li>Tambah genre dengan `INSERT INTO genres ...` bila belum ada.</li>
-            <li>Tambah lagu dengan `INSERT INTO tracks ...`.</li>
-            <li>Edit data dengan `UPDATE ... WHERE ...` bila ada salah judul atau urutan.</li>
-            <li>Hapus data dengan `DELETE ... WHERE ...` bila sudah tidak dipakai.</li>
-          </ol>
-        </section>
+    <section class="playlist-card">
+      <div class="playlist-head">
+        <div>
+          <p class="eyebrow">Playlist</p>
+          <h2 id="genreHeading">Semua genre</h2>
+        </div>
+        <p id="trackCount" class="muted">0 track</p>
       </div>
+
+      <div id="playlistContainer" class="playlist-list"></div>
     </section>
   </main>
 
-  <script>
-    (function () {
-      const root = document.documentElement;
-      const themeToggle = document.getElementById('themeToggle');
-      let theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-      root.setAttribute('data-theme', theme);
-      themeToggle.textContent = theme === 'dark' ? '☀' : '☾';
+  <div id="youtube-player" class="yt-hidden" aria-hidden="true"></div>
 
-      themeToggle.addEventListener('click', () => {
-        theme = theme === 'dark' ? 'light' : 'dark';
-        root.setAttribute('data-theme', theme);
-        themeToggle.textContent = theme === 'dark' ? '☀' : '☾';
-      });
-
-      document.querySelectorAll('[data-copy]').forEach((button) => {
-        button.addEventListener('click', async () => {
-          const targetId = button.getAttribute('data-copy');
-          const source = document.getElementById(targetId);
-          if (!source) return;
-
-          try {
-            await navigator.clipboard.writeText(source.textContent);
-            const old = button.textContent;
-            button.textContent = 'Copied';
-            setTimeout(() => button.textContent = old, 1200);
-          } catch {
-            button.textContent = 'Gagal';
-            setTimeout(() => button.textContent = 'Copy', 1200);
-          }
-        });
-      });
-    })();
-  </script>
+  <script src="./js/app.js" defer></script>
 </body>
 </html>
