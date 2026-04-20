@@ -8,13 +8,13 @@ const state = {
   isPlaying: false,
   theme: localStorage.getItem('theme') || "dark",
   progressInterval: null,
-  searchQuery: ""
+  deferredPrompt: null
 };
 
 const ICONS = {
   play: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>`,
   pause: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>`,
-  playing: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h1m8-9v1m8 8h1m-9 8v1M5.6 5.6l.7.7m11.4 11.4l.7.7M5.6 18.4l.7-.7m11.4-11.4l.7-.7"/></svg>`
+  playing_icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h1m8-9v1m8 8h1m-9 8v1M5.6 5.6l.7.7m11.4 11.4l.7.7M5.6 18.4l.7-.7m11.4-11.4l.7-.7"/></svg>`
 };
 
 const refs = {
@@ -25,74 +25,28 @@ const refs = {
   currentTime: document.getElementById("currentTime"),
   durationTime: document.getElementById("durationTime"),
   themeToggle: document.getElementById("themeToggle"),
-  searchInput: document.getElementById("searchInput"),
-  genreNav: document.getElementById("genreNav"),
-  genreHeading: document.getElementById("genreHeading"),
-  clearCacheBtn: document.getElementById("clearCacheBtn"),
-  nowTitle: document.getElementById("nowTitle"),
-  nowArtist: document.getElementById("nowArtist")
-};
-
-// LOAD YOUTUBE API
-const tag = document.createElement('script');
-tag.src = "https://www.youtube.com/iframe_api";
-document.head.appendChild(tag);
-
-window.onYouTubeIframeAPIReady = () => {
-  state.player = new YT.Player("youtube-player", {
-    height: "1", width: "1",
-    playerVars: { autoplay: 0, controls: 0, playsinline: 1, rel: 0 },
-    events: {
-      onReady: () => { state.playerReady = true; },
-      onStateChange: (e) => {
-        state.isPlaying = (e.data === YT.PlayerState.PLAYING);
-        refs.playPauseBtn.innerHTML = state.isPlaying ? ICONS.pause : ICONS.play;
-        if (state.isPlaying) startTimer();
-        if (e.data === YT.PlayerState.ENDED) navigateTrack(1);
-        renderPlaylist();
-      }
-    }
-  });
+  installBtn: document.getElementById("installBtn"),
+  refreshBtn: document.getElementById("refreshBtn"),
+  clearCacheBtn: document.getElementById("clearCacheBtn")
 };
 
 document.addEventListener("DOMContentLoaded", () => {
   applyTheme(state.theme);
-  loadLibrary();
   bindEvents();
+  loadLibrary();
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(() => {});
 });
 
 function bindEvents() {
   refs.playPauseBtn.addEventListener("click", onPlayPause);
   document.getElementById("prevBtn").addEventListener("click", () => navigateTrack(-1));
   document.getElementById("nextBtn").addEventListener("click", () => navigateTrack(1));
-  document.getElementById("refreshBtn").addEventListener("click", () => location.reload());
-  
-  // FIX HAPUS CACHE
-  refs.clearCacheBtn.addEventListener("click", () => {
-    if (confirm("Reset aplikasi dan hapus cache?")) {
-      localStorage.clear();
-      if ('caches' in window) {
-        caches.keys().then(names => {
-          for (let name of names) caches.delete(name);
-        }).finally(() => {
-          window.location.href = window.location.pathname + '?r=' + Date.now();
-        });
-      } else {
-        location.reload();
-      }
-    }
-  });
-
-  refs.searchInput.addEventListener("input", (e) => {
-    state.searchQuery = e.target.value.toLowerCase();
-    refs.genreNav.style.display = state.searchQuery ? "none" : "block";
-    renderPlaylist();
-  });
+  refs.refreshBtn.addEventListener("click", () => location.reload());
+  refs.clearCacheBtn.addEventListener("click", clearCache);
 
   refs.timeBar.addEventListener("change", (e) => {
-    if (state.playerReady && state.player) state.player.seekTo(e.target.value, true);
+    if (state.player && state.playerReady) state.player.seekTo(e.target.value, true);
   });
-  
   refs.timeBar.addEventListener("input", (e) => {
     refs.currentTime.textContent = formatTime(e.target.value);
   });
@@ -102,6 +56,28 @@ function bindEvents() {
     applyTheme(state.theme);
     localStorage.setItem('theme', state.theme);
   });
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    state.deferredPrompt = e;
+    refs.installBtn.style.display = 'grid';
+  });
+
+  refs.installBtn.addEventListener('click', async () => {
+    if (state.deferredPrompt) {
+      state.deferredPrompt.prompt();
+      state.deferredPrompt = null;
+      refs.installBtn.style.display = 'none';
+    }
+  });
+}
+
+function clearCache() {
+  if (confirm("Hapus cache dan reset aplikasi?")) {
+    localStorage.clear();
+    caches.keys().then(names => names.forEach(n => caches.delete(n)));
+    location.reload();
+  }
 }
 
 async function loadLibrary() {
@@ -110,17 +86,17 @@ async function loadLibrary() {
     const data = await res.json();
     state.library = data.genres || [];
     if (state.library.length) {
-      state.activeGenreId = state.library[0].id;
+      state.activeGenreId = state.activeGenreId || state.library[0].id;
       renderGenres();
       renderPlaylist();
     }
-  } catch (e) { console.error("API error"); }
+  } catch (e) { console.error("Library failed"); }
 }
 
 function renderGenres() {
   refs.genreTabs.innerHTML = state.library.map(g => `
     <button class="genre-tab ${g.id === state.activeGenreId ? "active" : ""}" 
-            onclick="window.switchGenre(${g.id})">${g.name}</button>
+            onclick="switchGenre(${g.id})">${g.name}</button>
   `).join("");
 }
 
@@ -131,85 +107,79 @@ window.switchGenre = (id) => {
 };
 
 function renderPlaylist() {
-  let list = [];
-  if (state.searchQuery) {
-    refs.genreHeading.textContent = "Hasil Pencarian";
-    state.library.forEach(g => {
-      g.tracks.forEach(t => {
-        if (t.title.toLowerCase().includes(state.searchQuery) || t.artist.toLowerCase().includes(state.searchQuery)) {
-          list.push(t);
-        }
-      });
-    });
-  } else {
-    const genre = state.library.find(g => g.id === state.activeGenreId);
-    refs.genreHeading.textContent = genre?.name || "Folder";
-    list = genre?.tracks || [];
-  }
+  const genre = state.library.find(g => g.id === state.activeGenreId);
+  const tracks = genre?.tracks || [];
+  document.getElementById("genreHeading").textContent = genre?.name || "Genre";
+  document.getElementById("trackCount").textContent = `${tracks.length} track`;
 
-  document.getElementById("trackCount").textContent = `${list.length} track`;
-
-  refs.playlistContainer.innerHTML = list.map((t, i) => {
-    const active = state.activeTrack?.id === t.id;
+  refs.playlistContainer.innerHTML = tracks.map((t, i) => {
+    const isActive = state.activeTrack?.id === t.id;
     return `
-      <button class="track-row ${active ? 'active' : ''}" onclick="window.playById('${t.id}', ${i})">
+      <button class="track-row ${isActive ? 'active' : ''}" onclick="selectTrack(${i})">
         <span class="track-index">${i + 1}</span>
         <div class="track-info">
           <span class="track-title">${t.title}</span>
           <span class="track-artist">${t.artist || "Unknown"}</span>
         </div>
-        <div class="track-icon-wrap" style="width:18px;height:18px;">
-          ${active && state.isPlaying ? ICONS.playing : ICONS.play}
+        <div class="track-icon-wrap">
+          ${isActive && state.isPlaying ? ICONS.playing_icon : ICONS.play}
         </div>
       </button>
     `;
   }).join("");
 }
 
-// FUNGSI UTAMA - DAFTARKAN KE WINDOW AGAR BISA DIPANGGIL DARI HTML
-window.playById = (id, idx) => {
-  let trackFound = null;
-  state.library.forEach(g => {
-    const t = g.tracks.find(x => x.id === id);
-    if (t) trackFound = t;
-  });
+window.selectTrack = async (index) => {
+  const genre = state.library.find(g => g.id === state.activeGenreId);
+  const track = genre.tracks[index];
+  if (!track) return;
 
-  if (trackFound) {
-    state.activeTrack = trackFound;
-    state.activeTrackIndex = idx;
-    
-    // UPDATE UI SEKETIKA
-    refs.nowTitle.textContent = trackFound.title;
-    refs.nowArtist.textContent = trackFound.artist;
+  state.activeTrack = track;
+  state.activeTrackIndex = index;
+  document.getElementById("nowTitle").textContent = track.title;
+  document.getElementById("nowArtist").textContent = track.artist;
 
-    if (state.playerReady && state.player) {
-      state.player.loadVideoById(trackFound.youtubeVideoId);
-    } else {
-      alert("Pemutar video sedang disiapkan, silakan coba lagi dalam 2 detik.");
-    }
-    renderPlaylist();
+  if (!state.player) {
+    const tag = document.createElement('script');
+    tag.src = "https://www.youtube.com/iframe_api";
+    document.head.appendChild(tag);
+    window.onYouTubeIframeAPIReady = () => createPlayer(track.youtubeVideoId);
+  } else {
+    state.player.loadVideoById(track.youtubeVideoId);
   }
+  renderPlaylist();
 };
 
-function onPlayPause() {
-  if (!state.playerReady || !state.player) return;
-  state.isPlaying ? state.player.pauseVideo() : state.player.playVideo();
+function createPlayer(videoId) {
+  state.player = new YT.Player("youtube-player", {
+    height: "1", width: "1", videoId,
+    playerVars: { autoplay: 1, controls: 0, playsinline: 1 },
+    events: {
+      onReady: () => state.playerReady = true,
+      onStateChange: (e) => {
+        state.isPlaying = (e.data === YT.PlayerState.PLAYING);
+        refs.playPauseBtn.innerHTML = state.isPlaying ? ICONS.pause : ICONS.play;
+        if (state.isPlaying) startTimer();
+        if (e.data === YT.PlayerState.ENDED) navigateTrack(1);
+        renderPlaylist();
+      }
+    }
+  });
 }
 
 function navigateTrack(dir) {
   const genre = state.library.find(g => g.id === state.activeGenreId);
   if (!genre) return;
-  let next = state.activeTrackIndex + dir;
-  if (next >= genre.tracks.length) next = 0;
-  if (next < 0) next = genre.tracks.length - 1;
-  const t = genre.tracks[next];
-  if (t) window.playById(t.id, next);
+  let nextIndex = state.activeTrackIndex + dir;
+  if (nextIndex >= genre.tracks.length) nextIndex = 0;
+  if (nextIndex < 0) nextIndex = genre.tracks.length - 1;
+  selectTrack(nextIndex);
 }
 
 function startTimer() {
   if (state.progressInterval) clearInterval(state.progressInterval);
   state.progressInterval = setInterval(() => {
-    if (state.player && state.player.getCurrentTime) {
+    if (state.player && state.isPlaying) {
       const cur = state.player.getCurrentTime();
       const dur = state.player.getDuration();
       refs.timeBar.max = dur;
@@ -225,6 +195,8 @@ function formatTime(s) {
   const sc = Math.floor(s % 60);
   return `${m}:${sc < 10 ? '0' : ''}${sc}`;
 }
+
+function onPlayPause() { if(state.player) state.isPlaying ? state.player.pauseVideo() : state.player.playVideo(); }
 
 function applyTheme(t) {
   document.documentElement.setAttribute("data-theme", t);
