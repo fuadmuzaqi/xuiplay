@@ -23,13 +23,7 @@
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
-body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--text);
-  font-family: var(--font-body);
-  transition: background 0.3s ease;
-}
+body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--font-body); transition: background 0.3s ease; }
 
 .topbar { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; position: sticky; top: 0; background: var(--bg); z-index: 50; }
 .brand { display: flex; align-items: center; gap: 10px; }
@@ -42,6 +36,7 @@ body {
 
 .player-card { background: var(--surface); border: 1px solid var(--border); padding: 32px 20px; border-radius: var(--radius); text-align: center; }
 .now-playing h2 { font-family: var(--font-display); font-size: 1.8rem; margin: 0 0 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.muted { color: var(--text-muted); font-size: 0.9rem; margin: 0; }
 
 .scrubber-container { margin: 24px 0; }
 .time-labels { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 6px; font-weight: 600; }
