@@ -20,7 +20,7 @@
       <h1>Music<span>Station</span></h1>
     </div>
     <div class="topbar-actions">
-      <button class="icon-btn" id="installBtn" style="display: none;">⬇</button>
+      <button class="icon-btn" id="installBtn" style="display: none;" title="Instal">⬇</button>
       <button class="icon-btn" id="clearCacheBtn" title="Hapus Cache">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
       </button>
@@ -60,11 +60,6 @@
     </section>
 
     <section class="playlist-card">
-      <div class="search-box">
-        <input type="text" id="searchInput" placeholder="Cari lagu atau artis..." autocomplete="off">
-        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-      </div>
-
       <header class="section-header">
         <div class="header-info">
           <svg class="folder-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
@@ -73,7 +68,7 @@
         <span id="trackCount" class="badge">0 track</span>
       </header>
 
-      <nav class="genre-nav" id="genreNav">
+      <nav class="genre-nav">
         <div id="genreTabs" class="genre-tabs"></div>
       </nav>
 
