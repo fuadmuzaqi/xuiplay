@@ -8,7 +8,6 @@ const state = {
   isPlaying: false,
   theme: localStorage.getItem('theme') || "dark",
   progressInterval: null,
-  deferredPrompt: null,
   searchQuery: ""
 };
 
@@ -29,15 +28,15 @@ const refs = {
   searchInput: document.getElementById("searchInput"),
   genreNav: document.getElementById("genreNav"),
   genreHeading: document.getElementById("genreHeading"),
-  clearCacheBtn: document.getElementById("clearCacheBtn")
+  clearCacheBtn: document.getElementById("clearCacheBtn"),
+  nowTitle: document.getElementById("nowTitle"),
+  nowArtist: document.getElementById("nowArtist")
 };
 
-// Inisialisasi API YouTube di Awal
-(function initYT() {
-  const tag = document.createElement('script');
-  tag.src = "https://www.youtube.com/iframe_api";
-  document.head.appendChild(tag);
-})();
+// LOAD YOUTUBE API
+const tag = document.createElement('script');
+tag.src = "https://www.youtube.com/iframe_api";
+document.head.appendChild(tag);
 
 window.onYouTubeIframeAPIReady = () => {
   state.player = new YT.Player("youtube-player", {
@@ -68,19 +67,22 @@ function bindEvents() {
   document.getElementById("nextBtn").addEventListener("click", () => navigateTrack(1));
   document.getElementById("refreshBtn").addEventListener("click", () => location.reload());
   
-  // FIX CLEAR CACHE
-  refs.clearCacheBtn.addEventListener("click", async () => {
-    if (confirm("Reset aplikasi dan hapus semua data cache?")) {
+  // FIX HAPUS CACHE
+  refs.clearCacheBtn.addEventListener("click", () => {
+    if (confirm("Reset aplikasi dan hapus cache?")) {
       localStorage.clear();
       if ('caches' in window) {
-        const names = await caches.keys();
-        for (let name of names) await caches.delete(name);
+        caches.keys().then(names => {
+          for (let name of names) caches.delete(name);
+        }).finally(() => {
+          window.location.href = window.location.pathname + '?r=' + Date.now();
+        });
+      } else {
+        location.reload();
       }
-      location.reload();
     }
   });
 
-  // LOGIKA SEARCH TANPA GAP
   refs.searchInput.addEventListener("input", (e) => {
     state.searchQuery = e.target.value.toLowerCase();
     refs.genreNav.style.display = state.searchQuery ? "none" : "block";
@@ -88,7 +90,7 @@ function bindEvents() {
   });
 
   refs.timeBar.addEventListener("change", (e) => {
-    if (state.playerReady) state.player.seekTo(e.target.value, true);
+    if (state.playerReady && state.player) state.player.seekTo(e.target.value, true);
   });
   
   refs.timeBar.addEventListener("input", (e) => {
@@ -112,13 +114,13 @@ async function loadLibrary() {
       renderGenres();
       renderPlaylist();
     }
-  } catch (e) { console.error("Library error"); }
+  } catch (e) { console.error("API error"); }
 }
 
 function renderGenres() {
   refs.genreTabs.innerHTML = state.library.map(g => `
     <button class="genre-tab ${g.id === state.activeGenreId ? "active" : ""}" 
-            onclick="switchGenre(${g.id})">${g.name}</button>
+            onclick="window.switchGenre(${g.id})">${g.name}</button>
   `).join("");
 }
 
@@ -150,21 +152,22 @@ function renderPlaylist() {
   refs.playlistContainer.innerHTML = list.map((t, i) => {
     const active = state.activeTrack?.id === t.id;
     return `
-      <button class="track-row ${active ? 'active' : ''}" onclick="playById('${t.id}', ${i})">
+      <button class="track-row ${active ? 'active' : ''}" onclick="window.playById('${t.id}', ${i})">
         <span class="track-index">${i + 1}</span>
         <div class="track-info">
           <span class="track-title">${t.title}</span>
           <span class="track-artist">${t.artist || "Unknown"}</span>
         </div>
-        <div style="width:18px; height:18px;">${active && state.isPlaying ? ICONS.playing : ICONS.play}</div>
+        <div class="track-icon-wrap" style="width:18px;height:18px;">
+          ${active && state.isPlaying ? ICONS.playing : ICONS.play}
+        </div>
       </button>
     `;
   }).join("");
 }
 
+// FUNGSI UTAMA - DAFTARKAN KE WINDOW AGAR BISA DIPANGGIL DARI HTML
 window.playById = (id, idx) => {
-  if (!state.playerReady) return alert("Pemutar belum siap, tunggu sebentar...");
-  
   let trackFound = null;
   state.library.forEach(g => {
     const t = g.tracks.find(x => x.id === id);
@@ -174,15 +177,22 @@ window.playById = (id, idx) => {
   if (trackFound) {
     state.activeTrack = trackFound;
     state.activeTrackIndex = idx;
-    document.getElementById("nowTitle").textContent = trackFound.title;
-    document.getElementById("nowArtist").textContent = trackFound.artist;
-    state.player.loadVideoById(trackFound.youtubeVideoId);
+    
+    // UPDATE UI SEKETIKA
+    refs.nowTitle.textContent = trackFound.title;
+    refs.nowArtist.textContent = trackFound.artist;
+
+    if (state.playerReady && state.player) {
+      state.player.loadVideoById(trackFound.youtubeVideoId);
+    } else {
+      alert("Pemutar video sedang disiapkan, silakan coba lagi dalam 2 detik.");
+    }
     renderPlaylist();
   }
 };
 
 function onPlayPause() {
-  if (!state.playerReady) return;
+  if (!state.playerReady || !state.player) return;
   state.isPlaying ? state.player.pauseVideo() : state.player.playVideo();
 }
 
