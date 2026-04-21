@@ -46,6 +46,7 @@ function bindEvents() {
   refs.refreshBtn.addEventListener("click", () => location.reload());
   refs.clearCacheBtn.addEventListener("click", clearCache);
 
+  // Fungsi Pencarian
   refs.searchInput.addEventListener("input", (e) => {
     state.searchQuery = e.target.value.toLowerCase();
     renderPlaylist();
@@ -107,11 +108,13 @@ function renderPlaylist() {
   const genreNav = document.querySelector('.genre-nav');
   
   if (state.searchQuery.trim() === "") {
+    // Mode Normal Folder
     const genre = state.library.find(g => g.id === state.activeGenreId);
     tracks = genre?.tracks || [];
     document.getElementById("genreHeading").textContent = genre?.name || "Genre";
     genreNav.classList.remove('searching');
   } else {
+    // Mode Hasil Pencarian
     document.getElementById("genreHeading").textContent = "Hasil Pencarian";
     genreNav.classList.add('searching');
     
@@ -128,9 +131,9 @@ function renderPlaylist() {
 
   refs.playlistContainer.innerHTML = tracks.map((t, i) => {
     const isActive = state.activeTrack?.id === t.id;
+    // Jika mencari, gunakan goToOriginalPlaylist
     const clickAction = state.searchQuery ? `goToOriginalPlaylist('${t.id}', ${t.originGenreId})` : `selectTrack(${i})`;
     
-    // Memberikan ID unik pada baris lagu agar bisa ditargetkan oleh scroll
     return `
       <button id="track-${t.id}" class="track-row ${isActive ? 'active' : ''}" onclick="${clickAction}">
         <span class="track-index">${i + 1}</span>
@@ -146,37 +149,38 @@ function renderPlaylist() {
   }).join("");
 }
 
-// FUNGSI UTAMA: Pindah folder dan otomatis scroll ke lagu
+// FUNGSI TRANSISI: Pencarian -> Folder Asli -> Play -> Scroll
 window.goToOriginalPlaylist = (trackId, genreId) => {
-  // 1. Set genre aktif sesuai folder lagu
+  // 1. Ganti state genre ke folder asal lagu
   state.activeGenreId = genreId;
   
-  // 2. Matikan pencarian
+  // 2. Bersihkan query pencarian
   state.searchQuery = "";
   refs.searchInput.value = "";
   
-  // 3. Render ulang UI folder
+  // 3. Render ulang UI folder agar daftar lagu berubah ke folder asli
   renderGenres();
   renderPlaylist();
   
-  // 4. Cari indeks lagu di playlist folder baru
+  // 4. Cari index lagu tersebut di dalam folder aslinya
   const genre = state.library.find(g => g.id === genreId);
   const trackIndex = genre.tracks.findIndex(t => t.id === trackId);
   
   if (trackIndex !== -1) {
-    // Jalankan pemutaran
+    // 5. Jalankan pemutaran lagu
     selectTrack(trackIndex);
 
-    // 5. Logika Auto Scroll: Dijalankan setelah DOM selesai render
+    // 6. Auto-Scroll agar lagu langsung terlihat di layar
+    // Menggunakan setTimeout agar DOM sempat diperbarui sebelum di-scroll
     setTimeout(() => {
       const targetElement = document.getElementById(`track-${trackId}`);
       if (targetElement) {
         targetElement.scrollIntoView({ 
           behavior: 'smooth', 
-          block: 'center' // Menempatkan lagu di tengah layar
+          block: 'center' 
         });
       }
-    }, 100); 
+    }, 150); 
   }
 };
 
@@ -197,6 +201,7 @@ window.selectTrack = async (index) => {
     document.head.appendChild(tag);
     window.onYouTubeIframeAPIReady = () => createPlayer(track.youtubeVideoId);
   } else {
+    // loadVideoById memicu pemutaran otomatis
     state.player.loadVideoById(track.youtubeVideoId);
     state.player.playVideo();
   }
