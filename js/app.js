@@ -46,7 +46,7 @@ function bindEvents() {
   refs.refreshBtn.addEventListener("click", () => location.reload());
   refs.clearCacheBtn.addEventListener("click", clearCache);
 
-  // Fitur Pencarian Real-time
+  // Input Pencarian
   refs.searchInput.addEventListener("input", (e) => {
     state.searchQuery = e.target.value.toLowerCase();
     renderPlaylist();
@@ -99,7 +99,7 @@ async function loadLibrary() {
       renderGenres();
       renderPlaylist();
     }
-  } catch (e) { console.error("Library failed"); }
+  } catch (e) { console.error("Library load failed"); }
 }
 
 function renderGenres() {
@@ -122,11 +122,13 @@ function renderPlaylist() {
   const genreNav = document.querySelector('.genre-nav');
   
   if (state.searchQuery.trim() === "") {
+    // Mode Playlist Normal
     const genre = state.library.find(g => g.id === state.activeGenreId);
     tracks = genre?.tracks || [];
     document.getElementById("genreHeading").textContent = genre?.name || "Genre";
     genreNav.classList.remove('searching');
   } else {
+    // Mode Pencarian
     document.getElementById("genreHeading").textContent = "Hasil Pencarian";
     genreNav.classList.add('searching');
     
@@ -143,8 +145,8 @@ function renderPlaylist() {
 
   refs.playlistContainer.innerHTML = tracks.map((t, i) => {
     const isActive = state.activeTrack?.id === t.id;
-    // Logika klik: Jika di mode search, gunakan selectTrackFromSearch
-    const clickAction = state.searchQuery ? `selectTrackFromSearch('${t.id}', ${t.originGenreId})` : `selectTrack(${i})`;
+    // Logika Klik: Jika sedang mencari, arahkan ke folder asli
+    const clickAction = state.searchQuery ? `goToOriginalPlaylist('${t.id}', ${t.originGenreId})` : `selectTrack(${i})`;
     
     return `
       <button class="track-row ${isActive ? 'active' : ''}" onclick="${clickAction}">
@@ -161,24 +163,27 @@ function renderPlaylist() {
   }).join("");
 }
 
-// FUNGSI KRUSIAL: Langsung play dari pencarian
-window.selectTrackFromSearch = (trackId, genreId) => {
-  // 1. Pindah ke folder genre lagu tersebut agar navigasi Next/Prev berfungsi
+// FUNGSI BARU: Pindah ke folder asli lalu putar
+window.goToOriginalPlaylist = (trackId, genreId) => {
+  // 1. Ubah genre aktif ke folder lagu tersebut
   state.activeGenreId = genreId;
   
-  // 2. Cari indeks lagu di dalam genre aslinya
-  const genre = state.library.find(g => g.id === genreId);
-  const trackIndex = genre.tracks.findIndex(t => t.id === trackId);
-  
-  // 3. Reset UI Pencarian (opsional, agar user melihat lagu terpilih di list folder)
+  // 2. Matikan mode pencarian & bersihkan input
   state.searchQuery = "";
   refs.searchInput.value = "";
   
-  // 4. Update UI Genre Tab
+  // 3. Render ulang Tab dan Playlist agar sesuai folder asli
   renderGenres();
+  renderPlaylist();
   
-  // 5. Eksekusi pemutaran
-  selectTrack(trackIndex);
+  // 4. Cari indeks lagu di folder yang baru dibuka tersebut
+  const genre = state.library.find(g => g.id === genreId);
+  const trackIndex = genre.tracks.findIndex(t => t.id === trackId);
+  
+  // 5. Putar lagu berdasarkan indeks aslinya
+  if (trackIndex !== -1) {
+    selectTrack(trackIndex);
+  }
 };
 
 window.selectTrack = async (index) => {
@@ -189,19 +194,18 @@ window.selectTrack = async (index) => {
   state.activeTrack = track;
   state.activeTrackIndex = index;
   
-  // Update UI Player
   document.getElementById("nowTitle").textContent = track.title;
   document.getElementById("nowArtist").textContent = track.artist;
 
-  // Inisialisasi atau Load Video
   if (!state.player) {
     const tag = document.createElement('script');
     tag.src = "https://www.youtube.com/iframe_api";
     document.head.appendChild(tag);
     window.onYouTubeIframeAPIReady = () => createPlayer(track.youtubeVideoId);
   } else {
-    // loadVideoById otomatis memutar lagu (autoplay)
+    // Memutar lagu secara otomatis
     state.player.loadVideoById(track.youtubeVideoId);
+    state.player.playVideo();
   }
   renderPlaylist();
 };
@@ -213,7 +217,7 @@ function createPlayer(videoId) {
     events: {
       onReady: (e) => {
         state.playerReady = true;
-        e.target.playVideo(); // Pastikan play saat pertama kali load
+        e.target.playVideo();
       },
       onStateChange: (e) => {
         state.isPlaying = (e.data === YT.PlayerState.PLAYING);
