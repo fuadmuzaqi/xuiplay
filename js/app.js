@@ -46,7 +46,6 @@ function bindEvents() {
   refs.refreshBtn.addEventListener("click", () => location.reload());
   refs.clearCacheBtn.addEventListener("click", clearCache);
 
-  // Input Pencarian
   refs.searchInput.addEventListener("input", (e) => {
     state.searchQuery = e.target.value.toLowerCase();
     renderPlaylist();
@@ -64,20 +63,6 @@ function bindEvents() {
     state.theme = state.theme === "dark" ? "light" : "dark";
     applyTheme(state.theme);
     localStorage.setItem('theme', state.theme);
-  });
-
-  window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    state.deferredPrompt = e;
-    refs.installBtn.style.display = 'grid';
-  });
-
-  refs.installBtn.addEventListener('click', async () => {
-    if (state.deferredPrompt) {
-      state.deferredPrompt.prompt();
-      state.deferredPrompt = null;
-      refs.installBtn.style.display = 'none';
-    }
   });
 }
 
@@ -122,13 +107,11 @@ function renderPlaylist() {
   const genreNav = document.querySelector('.genre-nav');
   
   if (state.searchQuery.trim() === "") {
-    // Mode Playlist Normal
     const genre = state.library.find(g => g.id === state.activeGenreId);
     tracks = genre?.tracks || [];
     document.getElementById("genreHeading").textContent = genre?.name || "Genre";
     genreNav.classList.remove('searching');
   } else {
-    // Mode Pencarian
     document.getElementById("genreHeading").textContent = "Hasil Pencarian";
     genreNav.classList.add('searching');
     
@@ -145,11 +128,11 @@ function renderPlaylist() {
 
   refs.playlistContainer.innerHTML = tracks.map((t, i) => {
     const isActive = state.activeTrack?.id === t.id;
-    // Logika Klik: Jika sedang mencari, arahkan ke folder asli
     const clickAction = state.searchQuery ? `goToOriginalPlaylist('${t.id}', ${t.originGenreId})` : `selectTrack(${i})`;
     
+    // Memberikan ID unik pada baris lagu agar bisa ditargetkan oleh scroll
     return `
-      <button class="track-row ${isActive ? 'active' : ''}" onclick="${clickAction}">
+      <button id="track-${t.id}" class="track-row ${isActive ? 'active' : ''}" onclick="${clickAction}">
         <span class="track-index">${i + 1}</span>
         <div class="track-info">
           <span class="track-title">${t.title}</span>
@@ -163,26 +146,37 @@ function renderPlaylist() {
   }).join("");
 }
 
-// FUNGSI BARU: Pindah ke folder asli lalu putar
+// FUNGSI UTAMA: Pindah folder dan otomatis scroll ke lagu
 window.goToOriginalPlaylist = (trackId, genreId) => {
-  // 1. Ubah genre aktif ke folder lagu tersebut
+  // 1. Set genre aktif sesuai folder lagu
   state.activeGenreId = genreId;
   
-  // 2. Matikan mode pencarian & bersihkan input
+  // 2. Matikan pencarian
   state.searchQuery = "";
   refs.searchInput.value = "";
   
-  // 3. Render ulang Tab dan Playlist agar sesuai folder asli
+  // 3. Render ulang UI folder
   renderGenres();
   renderPlaylist();
   
-  // 4. Cari indeks lagu di folder yang baru dibuka tersebut
+  // 4. Cari indeks lagu di playlist folder baru
   const genre = state.library.find(g => g.id === genreId);
   const trackIndex = genre.tracks.findIndex(t => t.id === trackId);
   
-  // 5. Putar lagu berdasarkan indeks aslinya
   if (trackIndex !== -1) {
+    // Jalankan pemutaran
     selectTrack(trackIndex);
+
+    // 5. Logika Auto Scroll: Dijalankan setelah DOM selesai render
+    setTimeout(() => {
+      const targetElement = document.getElementById(`track-${trackId}`);
+      if (targetElement) {
+        targetElement.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'center' // Menempatkan lagu di tengah layar
+        });
+      }
+    }, 100); 
   }
 };
 
@@ -203,7 +197,6 @@ window.selectTrack = async (index) => {
     document.head.appendChild(tag);
     window.onYouTubeIframeAPIReady = () => createPlayer(track.youtubeVideoId);
   } else {
-    // Memutar lagu secara otomatis
     state.player.loadVideoById(track.youtubeVideoId);
     state.player.playVideo();
   }
