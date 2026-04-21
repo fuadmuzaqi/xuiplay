@@ -8,7 +8,8 @@ const state = {
   isPlaying: false,
   theme: localStorage.getItem('theme') || "dark",
   progressInterval: null,
-  deferredPrompt: null
+  deferredPrompt: null,
+  searchQuery: "" // State baru untuk pencarian
 };
 
 const ICONS = {
@@ -27,7 +28,8 @@ const refs = {
   themeToggle: document.getElementById("themeToggle"),
   installBtn: document.getElementById("installBtn"),
   refreshBtn: document.getElementById("refreshBtn"),
-  clearCacheBtn: document.getElementById("clearCacheBtn")
+  clearCacheBtn: document.getElementById("clearCacheBtn"),
+  searchInput: document.getElementById("searchInput") // Ref baru
 };
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -43,6 +45,12 @@ function bindEvents() {
   document.getElementById("nextBtn").addEventListener("click", () => navigateTrack(1));
   refs.refreshBtn.addEventListener("click", () => location.reload());
   refs.clearCacheBtn.addEventListener("click", clearCache);
+
+  // Event untuk Search
+  refs.searchInput.addEventListener("input", (e) => {
+    state.searchQuery = e.target.value.toLowerCase();
+    renderPlaylist();
+  });
 
   refs.timeBar.addEventListener("change", (e) => {
     if (state.player && state.playerReady) state.player.seekTo(e.target.value, true);
@@ -102,20 +110,46 @@ function renderGenres() {
 
 window.switchGenre = (id) => {
   state.activeGenreId = id;
+  state.searchQuery = ""; // Reset search saat ganti genre
+  refs.searchInput.value = "";
   renderGenres();
   renderPlaylist();
 };
 
 function renderPlaylist() {
-  const genre = state.library.find(g => g.id === state.activeGenreId);
-  const tracks = genre?.tracks || [];
-  document.getElementById("genreHeading").textContent = genre?.name || "Genre";
+  let tracks = [];
+  const genreNav = document.querySelector('.genre-nav');
+  
+  if (state.searchQuery.trim() === "") {
+    // Mode Normal: Berdasarkan Genre
+    const genre = state.library.find(g => g.id === state.activeGenreId);
+    tracks = genre?.tracks || [];
+    document.getElementById("genreHeading").textContent = genre?.name || "Genre";
+    genreNav.classList.remove('searching');
+  } else {
+    // Mode Search: Cari di SEMUA Genre
+    document.getElementById("genreHeading").textContent = "Hasil Pencarian";
+    genreNav.classList.add('searching');
+    
+    state.library.forEach(g => {
+      const matched = g.tracks.filter(t => 
+        t.title.toLowerCase().includes(state.searchQuery) || 
+        t.artist.toLowerCase().includes(state.searchQuery)
+      );
+      // Tambahkan info genre asalnya supaya saat diklik bisa navigasi dengan benar
+      matched.forEach(t => tracks.push({...t, originGenreId: g.id}));
+    });
+  }
+
   document.getElementById("trackCount").textContent = `${tracks.length} track`;
 
   refs.playlistContainer.innerHTML = tracks.map((t, i) => {
     const isActive = state.activeTrack?.id === t.id;
+    // Gunakan onclick khusus untuk search agar bisa pindah genre otomatis
+    const clickAction = state.searchQuery ? `selectTrackFromSearch('${t.id}', ${t.originGenreId})` : `selectTrack(${i})`;
+    
     return `
-      <button class="track-row ${isActive ? 'active' : ''}" onclick="selectTrack(${i})">
+      <button class="track-row ${isActive ? 'active' : ''}" onclick="${clickAction}">
         <span class="track-index">${i + 1}</span>
         <div class="track-info">
           <span class="track-title">${t.title}</span>
@@ -128,6 +162,21 @@ function renderPlaylist() {
     `;
   }).join("");
 }
+
+// Fungsi pembantu untuk memilih lagu dari hasil pencarian
+window.selectTrackFromSearch = (trackId, genreId) => {
+  state.activeGenreId = genreId;
+  const genre = state.library.find(g => g.id === genreId);
+  const trackIndex = genre.tracks.findIndex(t => t.id === trackId);
+  
+  // Reset search UI tapi pertahankan state query jika ingin tetap di hasil search
+  // Di sini kita pilih untuk tutup search agar user kembali ke konteks folder genre lagu tsb
+  state.searchQuery = "";
+  refs.searchInput.value = "";
+  
+  renderGenres();
+  selectTrack(trackIndex);
+};
 
 window.selectTrack = async (index) => {
   const genre = state.library.find(g => g.id === state.activeGenreId);
