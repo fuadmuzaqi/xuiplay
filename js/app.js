@@ -46,7 +46,7 @@ function bindEvents() {
   refs.refreshBtn.addEventListener("click", () => location.reload());
   refs.clearCacheBtn.addEventListener("click", clearCache);
 
-  // Fungsi Pencarian
+  // Input Pencarian
   refs.searchInput.addEventListener("input", (e) => {
     state.searchQuery = e.target.value.toLowerCase();
     renderPlaylist();
@@ -64,6 +64,20 @@ function bindEvents() {
     state.theme = state.theme === "dark" ? "light" : "dark";
     applyTheme(state.theme);
     localStorage.setItem('theme', state.theme);
+  });
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    state.deferredPrompt = e;
+    refs.installBtn.style.display = 'grid';
+  });
+
+  refs.installBtn.addEventListener('click', async () => {
+    if (state.deferredPrompt) {
+      state.deferredPrompt.prompt();
+      state.deferredPrompt = null;
+      refs.installBtn.style.display = 'none';
+    }
   });
 }
 
@@ -108,13 +122,13 @@ function renderPlaylist() {
   const genreNav = document.querySelector('.genre-nav');
   
   if (state.searchQuery.trim() === "") {
-    // Mode Normal Folder
+    // Mode Playlist Normal
     const genre = state.library.find(g => g.id === state.activeGenreId);
     tracks = genre?.tracks || [];
     document.getElementById("genreHeading").textContent = genre?.name || "Genre";
     genreNav.classList.remove('searching');
   } else {
-    // Mode Hasil Pencarian
+    // Mode Pencarian
     document.getElementById("genreHeading").textContent = "Hasil Pencarian";
     genreNav.classList.add('searching');
     
@@ -131,11 +145,11 @@ function renderPlaylist() {
 
   refs.playlistContainer.innerHTML = tracks.map((t, i) => {
     const isActive = state.activeTrack?.id === t.id;
-    // Jika mencari, gunakan goToOriginalPlaylist
+    // Logika Klik: Jika sedang mencari, arahkan ke folder asli
     const clickAction = state.searchQuery ? `goToOriginalPlaylist('${t.id}', ${t.originGenreId})` : `selectTrack(${i})`;
     
     return `
-      <button id="track-${t.id}" class="track-row ${isActive ? 'active' : ''}" onclick="${clickAction}">
+      <button class="track-row ${isActive ? 'active' : ''}" onclick="${clickAction}">
         <span class="track-index">${i + 1}</span>
         <div class="track-info">
           <span class="track-title">${t.title}</span>
@@ -149,38 +163,26 @@ function renderPlaylist() {
   }).join("");
 }
 
-// FUNGSI TRANSISI: Pencarian -> Folder Asli -> Play -> Scroll
+// FUNGSI BARU: Pindah ke folder asli lalu putar
 window.goToOriginalPlaylist = (trackId, genreId) => {
-  // 1. Ganti state genre ke folder asal lagu
+  // 1. Ubah genre aktif ke folder lagu tersebut
   state.activeGenreId = genreId;
   
-  // 2. Bersihkan query pencarian
+  // 2. Matikan mode pencarian & bersihkan input
   state.searchQuery = "";
   refs.searchInput.value = "";
   
-  // 3. Render ulang UI folder agar daftar lagu berubah ke folder asli
+  // 3. Render ulang Tab dan Playlist agar sesuai folder asli
   renderGenres();
   renderPlaylist();
   
-  // 4. Cari index lagu tersebut di dalam folder aslinya
+  // 4. Cari indeks lagu di folder yang baru dibuka tersebut
   const genre = state.library.find(g => g.id === genreId);
   const trackIndex = genre.tracks.findIndex(t => t.id === trackId);
   
+  // 5. Putar lagu berdasarkan indeks aslinya
   if (trackIndex !== -1) {
-    // 5. Jalankan pemutaran lagu
     selectTrack(trackIndex);
-
-    // 6. Auto-Scroll agar lagu langsung terlihat di layar
-    // Menggunakan setTimeout agar DOM sempat diperbarui sebelum di-scroll
-    setTimeout(() => {
-      const targetElement = document.getElementById(`track-${trackId}`);
-      if (targetElement) {
-        targetElement.scrollIntoView({ 
-          behavior: 'smooth', 
-          block: 'center' 
-        });
-      }
-    }, 150); 
   }
 };
 
@@ -201,7 +203,7 @@ window.selectTrack = async (index) => {
     document.head.appendChild(tag);
     window.onYouTubeIframeAPIReady = () => createPlayer(track.youtubeVideoId);
   } else {
-    // loadVideoById memicu pemutaran otomatis
+    // Memutar lagu secara otomatis
     state.player.loadVideoById(track.youtubeVideoId);
     state.player.playVideo();
   }
