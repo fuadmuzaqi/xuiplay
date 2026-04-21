@@ -9,7 +9,7 @@ const state = {
   theme: localStorage.getItem('theme') || "dark",
   progressInterval: null,
   deferredPrompt: null,
-  searchQuery: "" // State baru untuk pencarian
+  searchQuery: "" 
 };
 
 const ICONS = {
@@ -29,7 +29,7 @@ const refs = {
   installBtn: document.getElementById("installBtn"),
   refreshBtn: document.getElementById("refreshBtn"),
   clearCacheBtn: document.getElementById("clearCacheBtn"),
-  searchInput: document.getElementById("searchInput") // Ref baru
+  searchInput: document.getElementById("searchInput")
 };
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -46,7 +46,7 @@ function bindEvents() {
   refs.refreshBtn.addEventListener("click", () => location.reload());
   refs.clearCacheBtn.addEventListener("click", clearCache);
 
-  // Event untuk Search
+  // Fitur Pencarian Real-time
   refs.searchInput.addEventListener("input", (e) => {
     state.searchQuery = e.target.value.toLowerCase();
     renderPlaylist();
@@ -55,6 +55,7 @@ function bindEvents() {
   refs.timeBar.addEventListener("change", (e) => {
     if (state.player && state.playerReady) state.player.seekTo(e.target.value, true);
   });
+  
   refs.timeBar.addEventListener("input", (e) => {
     refs.currentTime.textContent = formatTime(e.target.value);
   });
@@ -110,7 +111,7 @@ function renderGenres() {
 
 window.switchGenre = (id) => {
   state.activeGenreId = id;
-  state.searchQuery = ""; // Reset search saat ganti genre
+  state.searchQuery = ""; 
   refs.searchInput.value = "";
   renderGenres();
   renderPlaylist();
@@ -121,13 +122,11 @@ function renderPlaylist() {
   const genreNav = document.querySelector('.genre-nav');
   
   if (state.searchQuery.trim() === "") {
-    // Mode Normal: Berdasarkan Genre
     const genre = state.library.find(g => g.id === state.activeGenreId);
     tracks = genre?.tracks || [];
     document.getElementById("genreHeading").textContent = genre?.name || "Genre";
     genreNav.classList.remove('searching');
   } else {
-    // Mode Search: Cari di SEMUA Genre
     document.getElementById("genreHeading").textContent = "Hasil Pencarian";
     genreNav.classList.add('searching');
     
@@ -136,7 +135,6 @@ function renderPlaylist() {
         t.title.toLowerCase().includes(state.searchQuery) || 
         t.artist.toLowerCase().includes(state.searchQuery)
       );
-      // Tambahkan info genre asalnya supaya saat diklik bisa navigasi dengan benar
       matched.forEach(t => tracks.push({...t, originGenreId: g.id}));
     });
   }
@@ -145,7 +143,7 @@ function renderPlaylist() {
 
   refs.playlistContainer.innerHTML = tracks.map((t, i) => {
     const isActive = state.activeTrack?.id === t.id;
-    // Gunakan onclick khusus untuk search agar bisa pindah genre otomatis
+    // Logika klik: Jika di mode search, gunakan selectTrackFromSearch
     const clickAction = state.searchQuery ? `selectTrackFromSearch('${t.id}', ${t.originGenreId})` : `selectTrack(${i})`;
     
     return `
@@ -163,18 +161,23 @@ function renderPlaylist() {
   }).join("");
 }
 
-// Fungsi pembantu untuk memilih lagu dari hasil pencarian
+// FUNGSI KRUSIAL: Langsung play dari pencarian
 window.selectTrackFromSearch = (trackId, genreId) => {
+  // 1. Pindah ke folder genre lagu tersebut agar navigasi Next/Prev berfungsi
   state.activeGenreId = genreId;
+  
+  // 2. Cari indeks lagu di dalam genre aslinya
   const genre = state.library.find(g => g.id === genreId);
   const trackIndex = genre.tracks.findIndex(t => t.id === trackId);
   
-  // Reset search UI tapi pertahankan state query jika ingin tetap di hasil search
-  // Di sini kita pilih untuk tutup search agar user kembali ke konteks folder genre lagu tsb
+  // 3. Reset UI Pencarian (opsional, agar user melihat lagu terpilih di list folder)
   state.searchQuery = "";
   refs.searchInput.value = "";
   
+  // 4. Update UI Genre Tab
   renderGenres();
+  
+  // 5. Eksekusi pemutaran
   selectTrack(trackIndex);
 };
 
@@ -185,15 +188,19 @@ window.selectTrack = async (index) => {
 
   state.activeTrack = track;
   state.activeTrackIndex = index;
+  
+  // Update UI Player
   document.getElementById("nowTitle").textContent = track.title;
   document.getElementById("nowArtist").textContent = track.artist;
 
+  // Inisialisasi atau Load Video
   if (!state.player) {
     const tag = document.createElement('script');
     tag.src = "https://www.youtube.com/iframe_api";
     document.head.appendChild(tag);
     window.onYouTubeIframeAPIReady = () => createPlayer(track.youtubeVideoId);
   } else {
+    // loadVideoById otomatis memutar lagu (autoplay)
     state.player.loadVideoById(track.youtubeVideoId);
   }
   renderPlaylist();
@@ -204,7 +211,10 @@ function createPlayer(videoId) {
     height: "1", width: "1", videoId,
     playerVars: { autoplay: 1, controls: 0, playsinline: 1 },
     events: {
-      onReady: () => state.playerReady = true,
+      onReady: (e) => {
+        state.playerReady = true;
+        e.target.playVideo(); // Pastikan play saat pertama kali load
+      },
       onStateChange: (e) => {
         state.isPlaying = (e.data === YT.PlayerState.PLAYING);
         refs.playPauseBtn.innerHTML = state.isPlaying ? ICONS.pause : ICONS.play;
@@ -245,7 +255,11 @@ function formatTime(s) {
   return `${m}:${sc < 10 ? '0' : ''}${sc}`;
 }
 
-function onPlayPause() { if(state.player) state.isPlaying ? state.player.pauseVideo() : state.player.playVideo(); }
+function onPlayPause() { 
+  if(state.player && state.playerReady) {
+    state.isPlaying ? state.player.pauseVideo() : state.player.playVideo(); 
+  }
+}
 
 function applyTheme(t) {
   document.documentElement.setAttribute("data-theme", t);
