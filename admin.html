@@ -10,18 +10,15 @@
         body { background-color: #09090b; color: #fafafa; font-family: 'Inter', sans-serif; }
         .tab-btn { padding: 10px 16px; font-size: 13px; font-weight: 500; color: #a1a1aa; border-bottom: 2px solid transparent; transition: 0.2s; }
         .tab-btn.active { color: #ffffff; border-bottom-color: #3b82f6; }
-        
-        /* Sub-tab styling */
         .sub-tab-btn { padding: 6px 12px; font-size: 12px; border-radius: 20px; background: #18181b; border: 1px solid #27272a; color: #a1a1aa; white-space: nowrap; transition: 0.2s; }
         .sub-tab-btn.active { background: #3b82f6; color: white; border-color: #3b82f6; }
-
         .input-field { background: #18181b; border: 1px solid #27272a; color: white; border-radius: 8px; padding: 12px; width: 100%; font-size: 14px; }
         .input-field:focus { border-color: #3b82f6; outline: none; }
         .btn-primary { background: #3b82f6; color: white; padding: 12px; border-radius: 8px; font-weight: 600; width: 100%; transition: 0.2s; }
-        .btn-primary:hover { background: #2563eb; }
         .card { background: #18181b; border: 1px solid #27272a; border-radius: 12px; padding: 20px; }
         .hidden { display: none; }
         .handle { cursor: grab; color: #52525b; padding-right: 10px; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
 <body class="min-h-screen pb-10">
@@ -41,14 +38,14 @@
         <div class="flex border-b border-zinc-800 mb-6 overflow-x-auto no-scrollbar">
             <button onclick="switchTab('add-track')" class="tab-btn active" id="tab-add-track">Tambah Lagu</button>
             <button onclick="switchTab('manage-tracks')" class="tab-btn" id="tab-manage-tracks">Urutan Lagu</button>
-            <button onclick="switchTab('manage-genres')" class="tab-btn" id="tab-manage-genres">Kategori/Genre</button>
+            <button onclick="switchTab('manage-genres')" class="tab-btn" id="tab-manage-genres">Urutan Genre</button>
         </div>
 
         <div id="content-add-track" class="tab-content">
             <div class="card">
                 <form id="trackForm" class="space-y-4">
                     <input type="url" id="yt_url" class="input-field" placeholder="Paste link YouTube..." required>
-                    <div id="loadingMsg" class="text-xs text-blue-400 hidden">⚡ Menarik data dari YouTube...</div>
+                    <div id="loadingMsg" class="text-xs text-blue-400 hidden italic">⚡ Memproses data video...</div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <input type="text" id="t_title" class="input-field" placeholder="Judul Lagu" required>
                         <input type="text" id="t_artist" class="input-field" placeholder="Artis">
@@ -65,21 +62,18 @@
 
         <div id="content-manage-tracks" class="tab-content hidden">
             <div id="genreSubTabWrapper" class="flex gap-2 overflow-x-auto pb-4 no-scrollbar mb-2"></div>
-            
-            <div id="trackListContainer" class="space-y-4">
-                <p class="text-center text-zinc-500 text-sm mt-10">Pilih genre untuk mengatur lagu.</p>
-            </div>
+            <div id="trackListContainer" class="space-y-4"></div>
         </div>
 
         <div id="content-manage-genres" class="tab-content hidden space-y-4">
             <div class="card">
-                <h3 class="text-sm font-bold mb-4">Buat Genre Baru</h3>
+                <h3 class="text-xs font-bold mb-4 uppercase text-zinc-500">Buat Genre Baru</h3>
                 <div class="flex gap-2">
                     <input type="text" id="new_genre_name" class="input-field" placeholder="Nama Genre...">
-                    <button onclick="addGenre()" class="bg-white text-black px-4 py-2 rounded-lg font-bold text-sm hover:bg-zinc-200">Add</button>
+                    <button onclick="addGenre()" class="bg-white text-black px-5 py-2 rounded-lg font-bold text-sm">Add</button>
                 </div>
             </div>
-            <div id="genreList" class="space-y-2"></div>
+            <div id="genreSortableList" class="space-y-2"></div>
         </div>
     </div>
 
@@ -95,9 +89,7 @@
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
             document.getElementById(`content-${tabId}`).classList.remove('hidden');
             document.getElementById(`tab-${tabId}`).classList.add('active');
-            if(tabId === 'manage-tracks' && globalGenres.length > 0) {
-                renderGenreSubTabs();
-            }
+            if(tabId === 'manage-tracks') renderGenreSubTabs();
         }
 
         async function doLogin() {
@@ -118,75 +110,64 @@
             globalGenres = data.genres;
             globalTracks = data.tracks;
             
-            // Populate Add Form Dropdown
+            // Dropdown Tambah
             document.getElementById('t_genre').innerHTML = globalGenres.map(g => `<option value="${g.id}">${g.name}</option>`).join('');
             
-            // Populate Genre List (Tab 3)
-            document.getElementById('genreList').innerHTML = globalGenres.map(g => `
-                <div class="flex items-center gap-2 card p-3">
+            // List Urutan Genre (Tab 3)
+            const gList = document.getElementById('genreSortableList');
+            gList.innerHTML = globalGenres.map(g => `
+                <div class="flex items-center gap-2 card p-3" data-id="${g.id}">
+                    <span class="handle">⠿</span>
                     <input type="text" value="${g.name}" class="bg-transparent flex-1 outline-none text-sm" onchange="updateGenre(${g.id}, this.value)">
-                    <button onclick="deleteGenre(${g.id})" class="text-zinc-600 hover:text-red-500 text-sm">✕</button>
+                    <button onclick="deleteGenre(${g.id})" class="text-zinc-600 hover:text-red-500 text-sm p-1">✕</button>
                 </div>
             `).join('');
+
+            new Sortable(gList, {
+                handle: '.handle', animation: 150,
+                onEnd: async (evt) => {
+                    const items = Array.from(evt.to.children).map((el, idx) => ({ id: el.dataset.id, sort_order: idx }));
+                    await fetch('/api/admin', { method: 'POST', body: JSON.stringify({ action: 'updateGenreOrder', items }) });
+                }
+            });
         }
 
-        // --- SUB-TAB LOGIC FOR MANAGE TRACKS ---
         function renderGenreSubTabs() {
             const wrapper = document.getElementById('genreSubTabWrapper');
-            wrapper.innerHTML = globalGenres.map((g, idx) => `
-                <button onclick="switchGenreSubTab(${g.id})" id="sub-tab-${g.id}" class="sub-tab-btn">
-                    ${g.name}
-                </button>
+            wrapper.innerHTML = globalGenres.map(g => `
+                <button onclick="switchGenreSubTab(${g.id})" id="sub-tab-${g.id}" class="sub-tab-btn">${g.name}</button>
             `).join('');
-            
-            // Auto click first tab if available
             if(globalGenres.length > 0) switchGenreSubTab(globalGenres[0].id);
         }
 
         function switchGenreSubTab(genreId) {
             document.querySelectorAll('.sub-tab-btn').forEach(btn => btn.classList.remove('active'));
-            document.getElementById(`sub-tab-${genreId}`).classList.add('active');
-            
+            const btn = document.getElementById(`sub-tab-${genreId}`);
+            if(btn) btn.classList.add('active');
             renderTracksForGenre(genreId);
         }
 
         function renderTracksForGenre(genreId) {
             const container = document.getElementById('trackListContainer');
             const genreTracks = globalTracks.filter(t => t.genre_id === genreId).sort((a,b) => a.sort_order - b.sort_order);
-
             if(genreTracks.length === 0) {
-                container.innerHTML = `<div class="card text-center text-zinc-500 py-10 text-sm">Belum ada lagu di genre ini.</div>`;
+                container.innerHTML = `<div class="card text-center text-zinc-500 py-10 text-sm">Belum ada lagu.</div>`;
                 return;
             }
+            container.innerHTML = `<div class="card p-0 overflow-hidden"><div id="sortableTracks" class="divide-y divide-zinc-800">
+                ${genreTracks.map(t => `
+                    <div class="flex items-center gap-3 p-4 bg-[#18181b]" data-id="${t.id}">
+                        <span class="handle">⠿</span>
+                        <div class="flex-1 min-w-0"><p class="text-sm font-medium truncate">${t.title}</p><p class="text-[10px] text-zinc-500 uppercase">${t.artist || '-'}</p></div>
+                        <button onclick="deleteTrack(${t.id})" class="text-[10px] text-zinc-600 hover:text-red-500 font-bold">HAPUS</button>
+                    </div>`).join('')}
+            </div></div>`;
 
-            container.innerHTML = `
-                <div class="card p-0 overflow-hidden">
-                    <div id="sortableList" class="divide-y divide-zinc-800">
-                        ${genreTracks.map(t => `
-                            <div class="flex items-center gap-3 p-4 bg-[#18181b]" data-id="${t.id}">
-                                <span class="handle">⠿</span>
-                                <div class="flex-1 min-w-0">
-                                    <p class="text-sm font-medium truncate">${t.title}</p>
-                                    <p class="text-[10px] text-zinc-500 uppercase tracking-tighter">${t.artist || '-'}</p>
-                                </div>
-                                <button onclick="deleteTrack(${t.id})" class="text-[10px] text-zinc-600 hover:text-red-500 font-bold">HAPUS</button>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-            `;
-
-            new Sortable(document.getElementById('sortableList'), {
-                handle: '.handle',
-                animation: 150,
+            new Sortable(document.getElementById('sortableTracks'), {
+                handle: '.handle', animation: 150,
                 onEnd: async (evt) => {
                     const items = Array.from(evt.to.children).map((el, idx) => ({ id: el.dataset.id, sort_order: idx }));
                     await fetch('/api/admin', { method: 'POST', body: JSON.stringify({ action: 'updateOrder', items }) });
-                    // Update local state order
-                    items.forEach(item => {
-                        const track = globalTracks.find(t => t.id == item.id);
-                        if(track) track.sort_order = item.sort_order;
-                    });
                 }
             });
         }
@@ -209,7 +190,7 @@
 
         document.getElementById('trackForm').onsubmit = async (e) => {
             e.preventDefault();
-            const res = await fetch('/api/admin', { method: 'POST', body: JSON.stringify({
+            await fetch('/api/admin', { method: 'POST', body: JSON.stringify({
                 action: 'addTrack',
                 genre_id: document.getElementById('t_genre').value,
                 title: document.getElementById('t_title').value,
@@ -217,7 +198,7 @@
                 youtube_url: document.getElementById('yt_url').value,
                 accent_color: document.getElementById('t_color').value
             })});
-            if(res.ok) { alert('Tersimpan!'); location.reload(); }
+            location.reload();
         };
 
         async function addGenre() {
