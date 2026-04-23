@@ -3,37 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin - Music Station</title>
+    <title>Pro Admin - Music Station</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <style>
         body { background-color: #09090b; color: #fafafa; font-family: 'Inter', sans-serif; }
-        .tab-btn { padding: 10px 16px; font-size: 14px; font-weight: 500; color: #a1a1aa; border-bottom: 2px solid transparent; transition: 0.2s; }
+        .tab-btn { padding: 10px 16px; font-size: 13px; font-weight: 500; color: #a1a1aa; border-bottom: 2px solid transparent; transition: 0.2s; }
         .tab-btn.active { color: #ffffff; border-bottom-color: #3b82f6; }
+        
+        /* Sub-tab styling */
+        .sub-tab-btn { padding: 6px 12px; font-size: 12px; border-radius: 20px; background: #18181b; border: 1px solid #27272a; color: #a1a1aa; white-space: nowrap; transition: 0.2s; }
+        .sub-tab-btn.active { background: #3b82f6; color: white; border-color: #3b82f6; }
+
         .input-field { background: #18181b; border: 1px solid #27272a; color: white; border-radius: 8px; padding: 12px; width: 100%; font-size: 14px; }
         .input-field:focus { border-color: #3b82f6; outline: none; }
         .btn-primary { background: #3b82f6; color: white; padding: 12px; border-radius: 8px; font-weight: 600; width: 100%; transition: 0.2s; }
         .btn-primary:hover { background: #2563eb; }
         .card { background: #18181b; border: 1px solid #27272a; border-radius: 12px; padding: 20px; }
         .hidden { display: none; }
-        .handle { cursor: grab; color: #52525b; }
+        .handle { cursor: grab; color: #52525b; padding-right: 10px; }
     </style>
 </head>
 <body class="min-h-screen pb-10">
 
     <div id="loginSection" class="max-w-sm mx-auto mt-24 p-6 card text-center">
-        <h1 class="text-xl font-bold mb-6">Admin Station</h1>
+        <h1 class="text-xl font-bold mb-6 tracking-tight">Station Admin</h1>
         <input type="password" id="accessCode" class="input-field mb-4 text-center" placeholder="Access Code">
         <button onclick="doLogin()" class="btn-primary">Login</button>
     </div>
 
     <div id="adminSection" class="hidden max-w-2xl mx-auto px-4 mt-6">
         <div class="flex justify-between items-center mb-6">
-            <h1 class="text-lg font-bold tracking-tight">Dashboard Admin</h1>
+            <h1 class="text-lg font-bold tracking-tight">Dashboard</h1>
             <button onclick="doLogout()" class="text-xs text-zinc-500 hover:text-red-400">Logout</button>
         </div>
 
-        <div class="flex border-b border-zinc-800 mb-6 overflow-x-auto whitespace-nowrap">
+        <div class="flex border-b border-zinc-800 mb-6 overflow-x-auto no-scrollbar">
             <button onclick="switchTab('add-track')" class="tab-btn active" id="tab-add-track">Tambah Lagu</button>
             <button onclick="switchTab('manage-tracks')" class="tab-btn" id="tab-manage-tracks">Urutan Lagu</button>
             <button onclick="switchTab('manage-genres')" class="tab-btn" id="tab-manage-genres">Kategori/Genre</button>
@@ -43,31 +48,35 @@
             <div class="card">
                 <form id="trackForm" class="space-y-4">
                     <input type="url" id="yt_url" class="input-field" placeholder="Paste link YouTube..." required>
-                    <div id="loadingMsg" class="text-xs text-blue-400 hidden">Mengambil data video...</div>
+                    <div id="loadingMsg" class="text-xs text-blue-400 hidden">⚡ Menarik data dari YouTube...</div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <input type="text" id="t_title" class="input-field" placeholder="Judul Lagu" required>
                         <input type="text" id="t_artist" class="input-field" placeholder="Artis">
                     </div>
                     <select id="t_genre" class="input-field" required></select>
-                    <div class="flex items-center gap-3">
-                        <label class="text-xs text-zinc-400 uppercase">Warna Aksen</label>
-                        <input type="color" id="t_color" class="w-full h-10 bg-transparent border-none cursor-pointer" value="#01696f">
+                    <div class="flex items-center gap-3 bg-[#09090b] p-3 rounded-lg border border-zinc-800">
+                        <label class="text-[10px] text-zinc-500 uppercase font-bold">Warna Aksen</label>
+                        <input type="color" id="t_color" class="flex-1 h-8 bg-transparent border-none cursor-pointer" value="#01696f">
                     </div>
-                    <button type="submit" class="btn-primary">Simpan Lagu</button>
+                    <button type="submit" class="btn-primary">Simpan ke Database</button>
                 </form>
             </div>
         </div>
 
-        <div id="content-manage-tracks" class="tab-content hidden space-y-6">
-            <div id="trackManagerList"></div>
+        <div id="content-manage-tracks" class="tab-content hidden">
+            <div id="genreSubTabWrapper" class="flex gap-2 overflow-x-auto pb-4 no-scrollbar mb-2"></div>
+            
+            <div id="trackListContainer" class="space-y-4">
+                <p class="text-center text-zinc-500 text-sm mt-10">Pilih genre untuk mengatur lagu.</p>
+            </div>
         </div>
 
         <div id="content-manage-genres" class="tab-content hidden space-y-4">
             <div class="card">
-                <h3 class="text-sm font-bold mb-4">Tambah Genre Baru</h3>
+                <h3 class="text-sm font-bold mb-4">Buat Genre Baru</h3>
                 <div class="flex gap-2">
-                    <input type="text" id="new_genre_name" class="input-field" placeholder="Nama Genre (misal: Punk Rock)">
-                    <button onclick="addGenre()" class="bg-zinc-100 text-black px-4 py-2 rounded-lg font-bold text-sm">Add</button>
+                    <input type="text" id="new_genre_name" class="input-field" placeholder="Nama Genre...">
+                    <button onclick="addGenre()" class="bg-white text-black px-4 py-2 rounded-lg font-bold text-sm hover:bg-zinc-200">Add</button>
                 </div>
             </div>
             <div id="genreList" class="space-y-2"></div>
@@ -75,6 +84,9 @@
     </div>
 
     <script>
+        let globalGenres = [];
+        let globalTracks = [];
+
         const capitalize = (s) => s.toLowerCase().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
         const toSlug = (s) => s.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '');
 
@@ -83,6 +95,9 @@
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
             document.getElementById(`content-${tabId}`).classList.remove('hidden');
             document.getElementById(`tab-${tabId}`).classList.add('active');
+            if(tabId === 'manage-tracks' && globalGenres.length > 0) {
+                renderGenreSubTabs();
+            }
         }
 
         async function doLogin() {
@@ -99,50 +114,84 @@
         async function loadMasterData() {
             const res = await fetch('/api/admin?action=getMasterData');
             if (!res.ok) return;
-            const { genres, tracks } = await res.json();
+            const data = await res.json();
+            globalGenres = data.genres;
+            globalTracks = data.tracks;
             
-            // Dropdown Form
-            document.getElementById('t_genre').innerHTML = genres.map(g => `<option value="${g.id}">${g.name}</option>`).join('');
+            // Populate Add Form Dropdown
+            document.getElementById('t_genre').innerHTML = globalGenres.map(g => `<option value="${g.id}">${g.name}</option>`).join('');
             
-            // List Genre
-            document.getElementById('genreList').innerHTML = genres.map(g => `
+            // Populate Genre List (Tab 3)
+            document.getElementById('genreList').innerHTML = globalGenres.map(g => `
                 <div class="flex items-center gap-2 card p-3">
-                    <input type="text" value="${g.name}" class="bg-transparent flex-1 outline-none" onchange="updateGenre(${g.id}, this.value)">
-                    <button onclick="deleteGenre(${g.id})" class="text-zinc-500 hover:text-red-500">✕</button>
+                    <input type="text" value="${g.name}" class="bg-transparent flex-1 outline-none text-sm" onchange="updateGenre(${g.id}, this.value)">
+                    <button onclick="deleteGenre(${g.id})" class="text-zinc-600 hover:text-red-500 text-sm">✕</button>
                 </div>
             `).join('');
+        }
 
-            // List Tracks & Drag
-            const manager = document.getElementById('trackManagerList');
-            manager.innerHTML = '';
-            genres.forEach(genre => {
-                const genreTracks = tracks.filter(t => t.genre_id === genre.id).sort((a,b) => a.sort_order - b.sort_order);
-                if(genreTracks.length === 0) return;
+        // --- SUB-TAB LOGIC FOR MANAGE TRACKS ---
+        function renderGenreSubTabs() {
+            const wrapper = document.getElementById('genreSubTabWrapper');
+            wrapper.innerHTML = globalGenres.map((g, idx) => `
+                <button onclick="switchGenreSubTab(${g.id})" id="sub-tab-${g.id}" class="sub-tab-btn">
+                    ${g.name}
+                </button>
+            `).join('');
+            
+            // Auto click first tab if available
+            if(globalGenres.length > 0) switchGenreSubTab(globalGenres[0].id);
+        }
 
-                const div = document.createElement('div');
-                div.className = 'card mb-4';
-                div.innerHTML = `<h3 class="text-xs font-bold text-zinc-500 uppercase mb-3">${genre.name}</h3><div class="sortable-list" data-gid="${genre.id}">
-                    ${genreTracks.map(t => `
-                        <div class="flex items-center gap-3 py-3 border-b border-zinc-800 last:border-0" data-id="${t.id}">
-                            <span class="handle text-lg">⠿</span>
-                            <div class="flex-1 min-w-0"><p class="text-sm font-medium truncate">${t.title}</p><p class="text-[10px] text-zinc-500">${t.artist || '-'}</p></div>
-                            <button onclick="deleteTrack(${t.id})" class="text-zinc-600 text-xs hover:text-red-500">Hapus</button>
-                        </div>
-                    `).join('')}
-                </div>`;
-                manager.appendChild(div);
+        function switchGenreSubTab(genreId) {
+            document.querySelectorAll('.sub-tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`sub-tab-${genreId}`).classList.add('active');
+            
+            renderTracksForGenre(genreId);
+        }
 
-                new Sortable(div.querySelector('.sortable-list'), {
-                    handle: '.handle', animation: 150,
-                    onEnd: (evt) => {
-                        const items = Array.from(evt.to.children).map((el, idx) => ({ id: el.dataset.id, sort_order: idx }));
-                        fetch('/api/admin', { method: 'POST', body: JSON.stringify({ action: 'updateOrder', items }) });
-                    }
-                });
+        function renderTracksForGenre(genreId) {
+            const container = document.getElementById('trackListContainer');
+            const genreTracks = globalTracks.filter(t => t.genre_id === genreId).sort((a,b) => a.sort_order - b.sort_order);
+
+            if(genreTracks.length === 0) {
+                container.innerHTML = `<div class="card text-center text-zinc-500 py-10 text-sm">Belum ada lagu di genre ini.</div>`;
+                return;
+            }
+
+            container.innerHTML = `
+                <div class="card p-0 overflow-hidden">
+                    <div id="sortableList" class="divide-y divide-zinc-800">
+                        ${genreTracks.map(t => `
+                            <div class="flex items-center gap-3 p-4 bg-[#18181b]" data-id="${t.id}">
+                                <span class="handle">⠿</span>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-medium truncate">${t.title}</p>
+                                    <p class="text-[10px] text-zinc-500 uppercase tracking-tighter">${t.artist || '-'}</p>
+                                </div>
+                                <button onclick="deleteTrack(${t.id})" class="text-[10px] text-zinc-600 hover:text-red-500 font-bold">HAPUS</button>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+
+            new Sortable(document.getElementById('sortableList'), {
+                handle: '.handle',
+                animation: 150,
+                onEnd: async (evt) => {
+                    const items = Array.from(evt.to.children).map((el, idx) => ({ id: el.dataset.id, sort_order: idx }));
+                    await fetch('/api/admin', { method: 'POST', body: JSON.stringify({ action: 'updateOrder', items }) });
+                    // Update local state order
+                    items.forEach(item => {
+                        const track = globalTracks.find(t => t.id == item.id);
+                        if(track) track.sort_order = item.sort_order;
+                    });
+                }
             });
         }
 
-        // Youtube AutoFill
+        // --- CORE ACTIONS ---
         document.getElementById('yt_url').addEventListener('input', async (e) => {
             const url = e.target.value;
             if (url.includes('youtube.com/') || url.includes('youtu.be/')) {
@@ -151,17 +200,16 @@
                 if (res.ok) {
                     const data = await res.json();
                     let [artist, title] = data.title.includes(' - ') ? data.title.split(' - ') : ['', data.title];
-                    document.getElementById('t_title').value = capitalize(title.replace(/\(Official.*\)|\[.*\]/gi, '').trim());
+                    document.getElementById('t_title').value = capitalize(title.replace(/\(Official.*\)|\[.*\]|MV|Lyric|Video/gi, '').trim());
                     document.getElementById('t_artist').value = capitalize(artist.trim());
                 }
                 document.getElementById('loadingMsg').classList.add('hidden');
             }
         });
 
-        // Add Logic
         document.getElementById('trackForm').onsubmit = async (e) => {
             e.preventDefault();
-            await fetch('/api/admin', { method: 'POST', body: JSON.stringify({
+            const res = await fetch('/api/admin', { method: 'POST', body: JSON.stringify({
                 action: 'addTrack',
                 genre_id: document.getElementById('t_genre').value,
                 title: document.getElementById('t_title').value,
@@ -169,8 +217,7 @@
                 youtube_url: document.getElementById('yt_url').value,
                 accent_color: document.getElementById('t_color').value
             })});
-            alert('Lagu tersimpan!');
-            location.reload();
+            if(res.ok) { alert('Tersimpan!'); location.reload(); }
         };
 
         async function addGenre() {
@@ -185,7 +232,7 @@
         }
 
         async function deleteGenre(id) {
-            if(confirm('Hapus genre dan semua isinya?')) {
+            if(confirm('Hapus genre dan isinya?')) {
                 await fetch('/api/admin', { method: 'POST', body: JSON.stringify({ action: 'deleteGenre', id }) });
                 location.reload();
             }
@@ -203,7 +250,7 @@
             if(res.ok) {
                 document.getElementById('loginSection').classList.add('hidden');
                 document.getElementById('adminSection').classList.remove('hidden');
-                loadMasterData();
+                await loadMasterData();
             }
         }
         init();
