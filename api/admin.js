@@ -25,9 +25,12 @@ export default async function handler(req, res) {
 
     if (!isAuth) return res.status(403).end();
 
-    // GENRE ACTIONS
+    // GENRE CRUD & ORDER
     if (body.action === 'addGenre') {
-      await client.execute({ sql: "INSERT INTO genres (name, slug) VALUES (?, ?)", args: [body.name, body.slug] });
+      await client.execute({ 
+        sql: "INSERT INTO genres (name, slug, sort_order) VALUES (?, ?, (SELECT IFNULL(MAX(sort_order),0)+1 FROM genres))", 
+        args: [body.name, body.slug] 
+      });
       return res.status(200).json({ ok: true });
     }
     if (body.action === 'updateGenre') {
@@ -38,8 +41,16 @@ export default async function handler(req, res) {
       await client.execute({ sql: "DELETE FROM genres WHERE id = ?", args: [body.id] });
       return res.status(200).json({ ok: true });
     }
+    if (body.action === 'updateGenreOrder') {
+      const queries = body.items.map(item => ({
+        sql: "UPDATE genres SET sort_order = ? WHERE id = ?",
+        args: [item.sort_order, item.id]
+      }));
+      await client.batch(queries, "write");
+      return res.status(200).json({ ok: true });
+    }
 
-    // TRACK ACTIONS
+    // TRACK CRUD & ORDER
     if (body.action === 'addTrack') {
       const url = new URL(body.youtube_url);
       const vid = url.hostname.includes('youtu.be') ? url.pathname.slice(1) : url.searchParams.get('v');
@@ -79,7 +90,7 @@ export default async function handler(req, res) {
       } catch (e) { return res.status(500).end(); }
     }
     if (action === 'getMasterData' && isAuth) {
-      const genres = await client.execute("SELECT * FROM genres ORDER BY name ASC");
+      const genres = await client.execute("SELECT * FROM genres ORDER BY sort_order ASC, name ASC");
       const tracks = await client.execute("SELECT * FROM tracks ORDER BY sort_order ASC");
       return res.status(200).json({ genres: genres.rows, tracks: tracks.rows });
     }
