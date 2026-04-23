@@ -7,12 +7,14 @@ export default async function handler(req, res) {
   }
 
   try {
+    // 1. Ambil genre, urutkan berdasarkan sort_order yang baru kita buat
     const genresResult = await db.execute(`
-      SELECT id, name, slug, created_at
+      SELECT id, name, slug, created_at, sort_order
       FROM genres
-      ORDER BY name ASC
+      ORDER BY sort_order ASC, name ASC
     `);
 
+    // 2. Ambil semua lagu, urutkan berdasarkan sort_order
     const tracksResult = await db.execute(`
       SELECT
         id,
@@ -29,16 +31,20 @@ export default async function handler(req, res) {
       ORDER BY sort_order ASC, id DESC
     `);
 
+    // 3. Mapping genre menjadi array objek dengan placeholder tracks
     const genres = genresResult.rows.map((genre) => ({
       id: Number(genre.id),
       name: genre.name,
       slug: genre.slug,
+      sortOrder: Number(genre.sort_order || 0),
       createdAt: genre.created_at,
       tracks: []
     }));
 
+    // 4. Masukkan ke dalam Map untuk mempercepat grouping lagu
     const grouped = new Map(genres.map((genre) => [genre.id, genre]));
 
+    // 5. Masukkan lagu ke dalam genre yang sesuai
     tracksResult.rows.forEach((track) => {
       const genre = grouped.get(Number(track.genre_id));
       if (!genre) return;
@@ -57,8 +63,10 @@ export default async function handler(req, res) {
       });
     });
 
+    // 6. Kirim respon final (Genre sudah terurut sesuai sort_order di admin)
     res.status(200).json({ genres });
   } catch (error) {
+    console.error("Library error:", error);
     res.status(500).json({ error: "Failed to load library." });
   }
 }
