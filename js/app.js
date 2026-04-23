@@ -46,7 +46,6 @@ function bindEvents() {
   refs.refreshBtn.addEventListener("click", () => location.reload());
   refs.clearCacheBtn.addEventListener("click", clearCache);
 
-  // Input Pencarian
   refs.searchInput.addEventListener("input", (e) => {
     state.searchQuery = e.target.value.toLowerCase();
     renderPlaylist();
@@ -65,20 +64,6 @@ function bindEvents() {
     applyTheme(state.theme);
     localStorage.setItem('theme', state.theme);
   });
-
-  window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    state.deferredPrompt = e;
-    refs.installBtn.style.display = 'grid';
-  });
-
-  refs.installBtn.addEventListener('click', async () => {
-    if (state.deferredPrompt) {
-      state.deferredPrompt.prompt();
-      state.deferredPrompt = null;
-      refs.installBtn.style.display = 'none';
-    }
-  });
 }
 
 function clearCache() {
@@ -95,6 +80,7 @@ async function loadLibrary() {
     const data = await res.json();
     state.library = data.genres || [];
     if (state.library.length) {
+      // Set genre pertama sebagai default jika belum ada yang aktif
       state.activeGenreId = state.activeGenreId || state.library[0].id;
       renderGenres();
       renderPlaylist();
@@ -107,6 +93,10 @@ function renderGenres() {
     <button class="genre-tab ${g.id === state.activeGenreId ? "active" : ""}" 
             onclick="switchGenre(${g.id})">${g.name}</button>
   `).join("");
+
+  // Auto-scroll ke tab genre yang aktif agar terlihat
+  const activeTab = document.querySelector('.genre-tab.active');
+  if (activeTab) activeTab.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
 }
 
 window.switchGenre = (id) => {
@@ -122,13 +112,11 @@ function renderPlaylist() {
   const genreNav = document.querySelector('.genre-nav');
   
   if (state.searchQuery.trim() === "") {
-    // Mode Playlist Normal
     const genre = state.library.find(g => g.id === state.activeGenreId);
     tracks = genre?.tracks || [];
     document.getElementById("genreHeading").textContent = genre?.name || "Genre";
     genreNav.classList.remove('searching');
   } else {
-    // Mode Pencarian
     document.getElementById("genreHeading").textContent = "Hasil Pencarian";
     genreNav.classList.add('searching');
     
@@ -145,7 +133,6 @@ function renderPlaylist() {
 
   refs.playlistContainer.innerHTML = tracks.map((t, i) => {
     const isActive = state.activeTrack?.id === t.id;
-    // Logika Klik: Jika sedang mencari, arahkan ke folder asli
     const clickAction = state.searchQuery ? `goToOriginalPlaylist('${t.id}', ${t.originGenreId})` : `selectTrack(${i})`;
     
     return `
@@ -163,31 +150,21 @@ function renderPlaylist() {
   }).join("");
 }
 
-// FUNGSI BARU: Pindah ke folder asli lalu putar
 window.goToOriginalPlaylist = (trackId, genreId) => {
-  // 1. Ubah genre aktif ke folder lagu tersebut
   state.activeGenreId = genreId;
-  
-  // 2. Matikan mode pencarian & bersihkan input
   state.searchQuery = "";
   refs.searchInput.value = "";
-  
-  // 3. Render ulang Tab dan Playlist agar sesuai folder asli
   renderGenres();
   renderPlaylist();
   
-  // 4. Cari indeks lagu di folder yang baru dibuka tersebut
   const genre = state.library.find(g => g.id === genreId);
   const trackIndex = genre.tracks.findIndex(t => t.id === trackId);
-  
-  // 5. Putar lagu berdasarkan indeks aslinya
-  if (trackIndex !== -1) {
-    selectTrack(trackIndex);
-  }
+  if (trackIndex !== -1) selectTrack(trackIndex);
 };
 
 window.selectTrack = async (index) => {
   const genre = state.library.find(g => g.id === state.activeGenreId);
+  if (!genre) return;
   const track = genre.tracks[index];
   if (!track) return;
 
@@ -203,12 +180,51 @@ window.selectTrack = async (index) => {
     document.head.appendChild(tag);
     window.onYouTubeIframeAPIReady = () => createPlayer(track.youtubeVideoId);
   } else {
-    // Memutar lagu secara otomatis
     state.player.loadVideoById(track.youtubeVideoId);
     state.player.playVideo();
   }
   renderPlaylist();
 };
+
+/**
+ * LOGIKA URUTAN GENRE:
+ * Fungsi ini mengecek apakah track sudah mencapai batas playlist di genre saat ini.
+ * Jika ya, ia akan berpindah ke genre berikutnya/sebelumnya dalam urutan library.
+ */
+function navigateTrack(dir) {
+  const currentGenreIndex = state.library.findIndex(g => g.id === state.activeGenreId);
+  if (currentGenreIndex === -1) return;
+
+  const currentGenre = state.library[currentGenreIndex];
+  let nextTrackIndex = state.activeTrackIndex + dir;
+
+  if (nextTrackIndex >= currentGenre.tracks.length) {
+    // PINDAH KE GENRE BERIKUTNYA
+    let nextGenreIndex = currentGenreIndex + 1;
+    if (nextGenreIndex >= state.library.length) nextGenreIndex = 0; // Kembali ke genre pertama jika sudah di akhir
+
+    const nextGenre = state.library[nextGenreIndex];
+    state.activeGenreId = nextGenre.id;
+    renderGenres();
+    renderPlaylist();
+    selectTrack(0); // Putar lagu pertama di genre baru
+  } 
+  else if (nextTrackIndex < 0) {
+    // PINDAH KE GENRE SEBELUMNYA
+    let prevGenreIndex = currentGenreIndex - 1;
+    if (prevGenreIndex < 0) prevGenreIndex = state.library.length - 1; // Kembali ke genre terakhir jika di awal
+
+    const prevGenre = state.library[prevGenreIndex];
+    state.activeGenreId = prevGenre.id;
+    renderGenres();
+    renderPlaylist();
+    selectTrack(prevGenre.tracks.length - 1); // Putar lagu terakhir di genre sebelumnya
+  } 
+  else {
+    // Navigasi normal di genre yang sama
+    selectTrack(nextTrackIndex);
+  }
+}
 
 function createPlayer(videoId) {
   state.player = new YT.Player("youtube-player", {
@@ -223,20 +239,11 @@ function createPlayer(videoId) {
         state.isPlaying = (e.data === YT.PlayerState.PLAYING);
         refs.playPauseBtn.innerHTML = state.isPlaying ? ICONS.pause : ICONS.play;
         if (state.isPlaying) startTimer();
-        if (e.data === YT.PlayerState.ENDED) navigateTrack(1);
+        if (e.data === YT.PlayerState.ENDED) navigateTrack(1); // Otomatis ke lagu/genre berikutnya
         renderPlaylist();
       }
     }
   });
-}
-
-function navigateTrack(dir) {
-  const genre = state.library.find(g => g.id === state.activeGenreId);
-  if (!genre) return;
-  let nextIndex = state.activeTrackIndex + dir;
-  if (nextIndex >= genre.tracks.length) nextIndex = 0;
-  if (nextIndex < 0) nextIndex = genre.tracks.length - 1;
-  selectTrack(nextIndex);
 }
 
 function startTimer() {
