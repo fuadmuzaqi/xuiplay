@@ -8,8 +8,9 @@ const client = createClient({
 
 export default async function handler(req, res) {
   const cookies = parse(req.headers.cookie || '');
-  const isAuthorized = cookies.session === process.env.ADMIN_SESSION_SECRET;
+  const isAuth = cookies.session === process.env.ADMIN_SESSION_SECRET;
 
+  // HANDLE POST
   if (req.method === 'POST') {
     const body = JSON.parse(req.body);
 
@@ -20,52 +21,58 @@ export default async function handler(req, res) {
           httpOnly: true,
           secure: true,
           sameSite: 'strict',
-          maxAge: 3600 // OTOMATIS LOGOUT SETELAH 1 JAM (3600 detik)
+          maxAge: 3600 // Logout otomatis dalam 1 jam (3600 detik)
         }));
-        return res.status(200).json({ success: true });
+        return res.status(200).json({ ok: true });
       }
-      return res.status(401).json({ message: 'Unauthorized' });
+      return res.status(401).end();
     }
 
-    if (!isAuthorized) return res.status(403).json({ message: 'Session Expired' });
+    if (!isAuth) return res.status(403).end();
 
     if (body.action === 'addTrack') {
       try {
-        let videoId = "";
         const urlObj = new URL(body.youtube_url);
-        videoId = urlObj.hostname.includes('youtu.be') ? urlObj.pathname.slice(1) : urlObj.searchParams.get('v');
+        const videoId = urlObj.hostname.includes('youtu.be') ? urlObj.pathname.slice(1) : urlObj.searchParams.get('v');
 
         await client.execute({
           sql: `INSERT INTO tracks (genre_id, title, artist, youtube_url, youtube_video_id, cover_url, accent_color) 
                 VALUES (?, ?, ?, ?, ?, ?, ?)`,
           args: [body.genre_id, body.title, body.artist, body.youtube_url, videoId, body.cover_url, body.accent_color]
         });
-        return res.status(200).json({ success: true });
-      } catch (err) {
-        return res.status(500).json({ error: err.message });
+        return res.status(200).json({ ok: true });
+      } catch (e) {
+        return res.status(500).json({ error: e.message });
       }
     }
   }
 
+  // HANDLE GET
   if (req.method === 'GET') {
     const { action, url } = req.query;
 
     if (action === 'check') {
-      return isAuthorized ? res.status(200).json({ ok: true }) : res.status(401).end();
+      return isAuth ? res.status(200).json({ ok: true }) : res.status(401).end();
     }
 
-    // PROXY UNTUK FETCH INFO YOUTUBE (Menghindari CORS)
-    if (action === 'fetchYoutube' && isAuthorized) {
+    if (action === 'logout') {
+      res.setHeader('Set-Cookie', serialize('session', '', {
+        path: '/',
+        expires: new Date(0),
+        maxAge: -1 
+      }));
+      return res.status(200).json({ ok: true });
+    }
+
+    if (action === 'fetchYoutube' && isAuth) {
         try {
-            const ytRes = await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`);
-            const data = await ytRes.json();
+            const yt = await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`);
+            const data = await yt.json();
             return res.status(200).json({ title: data.title });
-        } catch (e) {
-            return res.status(500).json({ error: "Gagal mengambil data YouTube" });
-        }
+        } catch (e) { return res.status(500).end(); }
     }
 
-    if (action === 'getGenres' && isAuthorized) {
+    if (action === 'getGenres' && isAuth) {
       const result = await client.execute("SELECT id, name FROM genres ORDER BY name ASC");
       return res.status(200).json(result.rows);
     }
