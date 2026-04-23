@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Panel - YouTube Music Station</title>
+    <title>Admin - YouTube Music Station</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { background-color: #0b0f1a; color: #f8fafc; font-family: 'Inter', sans-serif; }
@@ -13,74 +13,74 @@
             transition: border-color 0.2s;
         }
         .input-field:focus { border-color: #58a6ff; outline: none; }
-        .btn-blue { background: #238636; color: white; padding: 12px; border-radius: 6px; font-weight: 600; width: 100%; }
-        .btn-blue:hover { background: #2ea043; }
+        .btn-green { background: #238636; color: white; padding: 12px; border-radius: 6px; font-weight: 600; width: 100%; }
+        .btn-green:hover { background: #2ea043; }
         .hidden { display: none; }
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen p-4">
 
     <div id="loginSection" class="w-full max-w-sm bg-[#161b22] p-8 rounded-lg border border-[#30363d] shadow-2xl">
-        <h1 class="text-2xl font-bold mb-6 text-center">Admin Login</h1>
-        <input type="password" id="accessCode" class="input-field mb-4" placeholder="Masukkan Access Code">
-        <button onclick="doLogin()" class="btn-blue">Masuk</button>
+        <h1 class="text-2xl font-bold mb-6 text-center text-white">Admin Access</h1>
+        <input type="password" id="accessCode" class="input-field mb-4" placeholder="Enter Access Code">
+        <button onclick="doLogin()" class="btn-green">Login</button>
     </div>
 
     <div id="adminSection" class="hidden w-full max-w-lg bg-[#161b22] p-8 rounded-lg border border-[#30363d] shadow-2xl">
         <div class="flex justify-between items-center mb-6">
-            <h1 class="text-xl font-bold">Input Lagu Baru</h1>
-            <button onclick="doLogout()" class="text-sm text-red-400 hover:underline">Logout</button>
+            <h1 class="text-xl font-bold text-white">Input Music</h1>
+            <button onclick="doLogout()" class="text-sm text-red-400 hover:text-red-300 font-medium">Logout</button>
         </div>
         
         <form id="trackForm" class="space-y-4">
             <div>
-                <label class="block text-xs text-gray-400 mb-1 uppercase tracking-wider">YouTube URL</label>
-                <input type="url" id="youtube_url" class="input-field" placeholder="Paste link video di sini..." required>
-                <p id="loadingMsg" class="text-xs text-blue-400 mt-1 hidden">Mengambil data video...</p>
+                <label class="block text-xs text-gray-400 mb-1 uppercase">YouTube URL</label>
+                <input type="url" id="youtube_url" class="input-field" placeholder="Paste link video YouTube..." required>
+                <p id="loadingMsg" class="text-xs text-blue-400 mt-1 hidden">⚡ Memproses data video...</p>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-xs text-gray-400 mb-1 uppercase tracking-wider">Judul Lagu</label>
+                    <label class="block text-xs text-gray-400 mb-1 uppercase">Judul Lagu</label>
                     <input type="text" id="title" class="input-field" placeholder="Judul" required>
                 </div>
                 <div>
-                    <label class="block text-xs text-gray-400 mb-1 uppercase tracking-wider">Artis</label>
+                    <label class="block text-xs text-gray-400 mb-1 uppercase">Artis</label>
                     <input type="text" id="artist" class="input-field" placeholder="Nama Artis">
                 </div>
             </div>
 
             <div>
-                <label class="block text-xs text-gray-400 mb-1 uppercase tracking-wider">Genre</label>
-                <select id="genre_id" class="input-field" required></select>
+                <label class="block text-xs text-gray-400 mb-1 uppercase">Genre</label>
+                <select id="genre_id" class="input-field" required>
+                    <option value="">Memuat genre...</option>
+                </select>
             </div>
 
             <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-xs text-gray-400 mb-1 uppercase tracking-wider">Cover URL (Opsional)</label>
+                    <label class="block text-xs text-gray-400 mb-1 uppercase">Cover URL (Opsional)</label>
                     <input type="url" id="cover_url" class="input-field" placeholder="https://...">
                 </div>
                 <div>
-                    <label class="block text-xs text-gray-400 mb-1 uppercase tracking-wider">Warna Aksen</label>
+                    <label class="block text-xs text-gray-400 mb-1 uppercase">Warna Aksen</label>
                     <input type="color" id="accent_color" class="h-12 w-full bg-transparent border-none cursor-pointer" value="#01696f">
                 </div>
             </div>
 
-            <button type="submit" id="submitBtn" class="btn-blue mt-4">Simpan Lagu</button>
+            <button type="submit" id="submitBtn" class="btn-green mt-4">Save to Database</button>
         </form>
     </div>
 
     <script>
-        // Fungsi Capitalize Each Word
-        function capitalizeEachWord(str) {
-            return str.toLowerCase().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+        // Fungsi merubah teks menjadi Capitalize Each Word
+        function capitalize(str) {
+            return str.toLowerCase().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
         }
 
         async function checkSession() {
             const res = await fetch('/api/admin?action=check');
-            if (res.ok) {
-                showAdmin();
-            }
+            if (res.ok) showAdmin();
         }
 
         function showAdmin() {
@@ -95,99 +95,82 @@
                 method: 'POST',
                 body: JSON.stringify({ action: 'login', code })
             });
-            if (res.ok) {
-                showAdmin();
-            } else {
-                alert('Access Code Salah!');
-            }
+            if (res.ok) showAdmin();
+            else alert('Access Code Salah!');
+        }
+
+        async function doLogout() {
+            await fetch('/api/admin?action=logout'); // Hapus session di server
+            document.getElementById('adminSection').classList.add('hidden');
+            document.getElementById('loginSection').classList.remove('hidden');
+            document.getElementById('accessCode').value = "";
         }
 
         async function loadGenres() {
             const res = await fetch('/api/admin?action=getGenres');
-            if (!res.ok) return doLogout(); // Jika session habis (1 jam), otomatis logout
+            if (!res.ok) return doLogout(); // Jika session habis (1 jam)
             const genres = await res.json();
             const select = document.getElementById('genre_id');
             select.innerHTML = genres.map(g => `<option value="${g.id}">${g.name}</option>`).join('');
         }
 
-        // OTOMATIS AMBIL INFO YOUTUBE
+        // AUTO-FILL LOGIC
         document.getElementById('youtube_url').addEventListener('input', async (e) => {
             const url = e.target.value;
             if (url.includes('youtube.com/') || url.includes('youtu.be/')) {
                 document.getElementById('loadingMsg').classList.remove('hidden');
-                
                 try {
                     const res = await fetch(`/api/admin?action=fetchYoutube&url=${encodeURIComponent(url)}`);
                     if (res.ok) {
-                        const info = await res.json();
-                        // Format Capitalize
-                        let rawTitle = info.title || "";
-                        
-                        // Logika sederhana memisahkan Artis - Judul jika ada tanda "-" atau "|"
+                        const data = await res.json();
+                        let raw = data.title || "";
                         let artist = "";
-                        let title = rawTitle;
+                        let title = raw;
 
-                        if (rawTitle.includes(' - ')) {
-                            [artist, title] = rawTitle.split(' - ');
-                        } else if (rawTitle.includes(' | ')) {
-                            [artist, title] = rawTitle.split(' | ');
-                        }
+                        // Pecah jika ada format "Artis - Judul"
+                        if (raw.includes(' - ')) [artist, title] = raw.split(' - ');
+                        else if (raw.includes(' | ')) [artist, title] = raw.split(' | ');
 
-                        // Bersihkan teks dari (Official Video), [MV], dll
-                        title = title.replace(/\(Official.*\)|\[.*\]/gi, '').trim();
-                        artist = artist.trim();
-
-                        document.getElementById('title').value = capitalizeEachWord(title);
-                        document.getElementById('artist').value = capitalizeEachWord(artist);
+                        // Bersihkan embel-embel
+                        title = title.replace(/\(Official.*\)|\[.*\]|Video Klip|Lirik/gi, '').trim();
+                        
+                        document.getElementById('title').value = capitalize(title);
+                        document.getElementById('artist').value = capitalize(artist.trim());
                     }
-                } catch (err) {
-                    console.error("Gagal fetch info:", err);
-                } finally {
-                    document.getElementById('loadingMsg').classList.add('hidden');
-                }
+                } catch (err) { console.error(err); }
+                finally { document.getElementById('loadingMsg').classList.add('hidden'); }
             }
         });
 
         document.getElementById('trackForm').onsubmit = async (e) => {
             e.preventDefault();
             const btn = document.getElementById('submitBtn');
-            btn.innerText = 'Menyimpan...';
+            btn.innerText = 'Saving...';
             btn.disabled = true;
-
-            const data = {
-                action: 'addTrack',
-                genre_id: document.getElementById('genre_id').value,
-                title: document.getElementById('title').value,
-                artist: document.getElementById('artist').value,
-                youtube_url: document.getElementById('youtube_url').value,
-                cover_url: document.getElementById('cover_url').value,
-                accent_color: document.getElementById('accent_color').value
-            };
 
             const res = await fetch('/api/admin', {
                 method: 'POST',
-                body: JSON.stringify(data)
+                body: JSON.stringify({
+                    action: 'addTrack',
+                    genre_id: document.getElementById('genre_id').value,
+                    title: document.getElementById('title').value,
+                    artist: document.getElementById('artist').value,
+                    youtube_url: document.getElementById('youtube_url').value,
+                    cover_url: document.getElementById('cover_url').value,
+                    accent_color: document.getElementById('accent_color').value
+                })
             });
 
             if (res.ok) {
-                alert('Lagu berhasil disimpan!');
+                alert('Success!');
                 e.target.reset();
             } else {
-                alert('Gagal menyimpan. Session mungkin habis.');
-                location.reload();
+                alert('Failed to save.');
+                doLogout();
             }
-            btn.innerText = 'Simpan Lagu';
+            btn.innerText = 'Save to Database';
             btn.disabled = false;
         };
-
-        function doLogout() {
-            // Hapus cookie secara instan di client-side
-            document.cookie = "session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-            // Langsung ubah UI tanpa refresh total
-            document.getElementById('adminSection').classList.add('hidden');
-            document.getElementById('loginSection').classList.remove('hidden');
-            document.getElementById('accessCode').value = "";
-        }
 
         checkSession();
     </script>
