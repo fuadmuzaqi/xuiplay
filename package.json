@@ -10,7 +10,8 @@
     "deploy": "vercel"
   },
   "dependencies": {
-    "@libsql/client": "^0.15.6"
+    "@libsql/client": "^0.15.6",
+    "cookie": "^0.6.0"
   },
   "devDependencies": {
     "vercel": "^41.7.3"
