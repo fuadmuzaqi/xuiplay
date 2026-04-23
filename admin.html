@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - YouTube Music Station</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #0b0f1a; color: #f8fafc; font-family: 'Inter', sans-serif; }
+        .input-field { 
+            background: #161b22; border: 1px solid #30363d; 
+            color: #c9d1d9; border-radius: 6px; padding: 12px; width: 100%;
+            transition: border-color 0.2s;
+        }
+        .input-field:focus { border-color: #58a6ff; outline: none; }
+        .btn-blue { background: #238636; color: white; padding: 12px; border-radius: 6px; font-weight: 600; width: 100%; }
+        .btn-blue:hover { background: #2ea043; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <div id="loginSection" class="w-full max-w-sm bg-[#161b22] p-8 rounded-lg border border-[#30363d] shadow-2xl">
+        <h1 class="text-2xl font-bold mb-6 text-center">Admin Login</h1>
+        <input type="password" id="accessCode" class="input-field mb-4" placeholder="Masukkan Access Code">
+        <button onclick="doLogin()" class="btn-blue">Masuk</button>
+    </div>
+
+    <div id="adminSection" class="hidden w-full max-w-lg bg-[#161b22] p-8 rounded-lg border border-[#30363d] shadow-2xl">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-xl font-bold">Input Lagu Baru</h1>
+            <button onclick="doLogout()" class="text-sm text-red-400 hover:underline">Logout</button>
+        </div>
+        
+        <form id="trackForm" class="space-y-4">
+            <div>
+                <label class="block text-xs text-gray-400 mb-1 uppercase tracking-wider">Genre</label>
+                <select id="genre_id" class="input-field" required></select>
+            </div>
+            
+            <div>
+                <label class="block text-xs text-gray-400 mb-1 uppercase tracking-wider">Judul Lagu</label>
+                <input type="text" id="title" class="input-field" placeholder="Contoh: Tak Segampang Itu" required>
+            </div>
+
+            <div>
+                <label class="block text-xs text-gray-400 mb-1 uppercase tracking-wider">Artis</label>
+                <input type="text" id="artist" class="input-field" placeholder="Contoh: Anggi Marito">
+            </div>
+
+            <div>
+                <label class="block text-xs text-gray-400 mb-1 uppercase tracking-wider">YouTube URL</label>
+                <input type="url" id="youtube_url" class="input-field" placeholder="https://www.youtube.com/watch?v=..." required>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1 uppercase tracking-wider">Cover URL (Opsional)</label>
+                    <input type="url" id="cover_url" class="input-field" placeholder="https://...">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1 uppercase tracking-wider">Warna Aksen</label>
+                    <input type="color" id="accent_color" class="h-12 w-full bg-transparent border-none" value="#01696f">
+                </div>
+            </div>
+
+            <button type="submit" id="submitBtn" class="btn-blue mt-4">Simpan Ke Database</button>
+        </form>
+    </div>
+
+    <script>
+        async function checkSession() {
+            const res = await fetch('/api/admin?action=check');
+            if (res.ok) {
+                document.getElementById('loginSection').classList.add('hidden');
+                document.getElementById('adminSection').classList.remove('hidden');
+                loadGenres();
+            }
+        }
+
+        async function doLogin() {
+            const code = document.getElementById('accessCode').value;
+            const res = await fetch('/api/admin', {
+                method: 'POST',
+                body: JSON.stringify({ action: 'login', code })
+            });
+            if (res.ok) window.location.reload();
+            else alert('Access Code Salah!');
+        }
+
+        async function loadGenres() {
+            const res = await fetch('/api/admin?action=getGenres');
+            const genres = await res.json();
+            const select = document.getElementById('genre_id');
+            select.innerHTML = genres.map(g => `<option value="${g.id}">${g.name}</option>`).join('');
+        }
+
+        document.getElementById('trackForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            btn.innerText = 'Menyimpan...';
+            btn.disabled = true;
+
+            const data = {
+                action: 'addTrack',
+                genre_id: document.getElementById('genre_id').value,
+                title: document.getElementById('title').value,
+                artist: document.getElementById('artist').value,
+                youtube_url: document.getElementById('youtube_url').value,
+                cover_url: document.getElementById('cover_url').value,
+                accent_color: document.getElementById('accent_color').value
+            };
+
+            const res = await fetch('/api/admin', {
+                method: 'POST',
+                body: JSON.stringify(data)
+            });
+
+            if (res.ok) {
+                alert('Berhasil!');
+                e.target.reset();
+            } else {
+                alert('Gagal menyimpan.');
+            }
+            btn.innerText = 'Simpan Ke Database';
+            btn.disabled = false;
+        };
+
+        function doLogout() {
+            document.cookie = "session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+            window.location.reload();
+        }
+
+        checkSession();
+    </script>
+</body>
+</html>
