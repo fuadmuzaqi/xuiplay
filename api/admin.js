@@ -16,7 +16,7 @@ export default async function handler(req, res) {
     if (body.action === 'login') {
       if (body.code === process.env.ADMIN_ACCESS_CODE) {
         res.setHeader('Set-Cookie', serialize('session', process.env.ADMIN_SESSION_SECRET, {
-          path: '/', httpOnly: true, secure: true, sameSite: 'strict', maxAge: 3600 // 1 Jam
+          path: '/', httpOnly: true, secure: true, sameSite: 'strict', maxAge: 3600 
         }));
         return res.status(200).json({ ok: true });
       }
@@ -25,7 +25,7 @@ export default async function handler(req, res) {
 
     if (!isAuth) return res.status(403).end();
 
-    // GENRE CRUD
+    // GENRE ACTIONS
     if (body.action === 'addGenre') {
       await client.execute({ sql: "INSERT INTO genres (name, slug) VALUES (?, ?)", args: [body.name, body.slug] });
       return res.status(200).json({ ok: true });
@@ -39,7 +39,7 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: true });
     }
 
-    // TRACK CRUD
+    // TRACK ACTIONS
     if (body.action === 'addTrack') {
       const url = new URL(body.youtube_url);
       const vid = url.hostname.includes('youtu.be') ? url.pathname.slice(1) : url.searchParams.get('v');
@@ -66,14 +66,11 @@ export default async function handler(req, res) {
 
   if (req.method === 'GET') {
     const { action, url } = req.query;
-
     if (action === 'check') return isAuth ? res.status(200).json({ ok: true }) : res.status(401).end();
-
     if (action === 'logout') {
       res.setHeader('Set-Cookie', serialize('session', '', { path: '/', expires: new Date(0), maxAge: -1 }));
       return res.status(200).json({ ok: true });
     }
-
     if (action === 'fetchYoutube' && isAuth) {
       try {
         const yt = await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`);
@@ -81,13 +78,11 @@ export default async function handler(req, res) {
         return res.status(200).json({ title: data.title });
       } catch (e) { return res.status(500).end(); }
     }
-
     if (action === 'getMasterData' && isAuth) {
       const genres = await client.execute("SELECT * FROM genres ORDER BY name ASC");
       const tracks = await client.execute("SELECT * FROM tracks ORDER BY sort_order ASC");
       return res.status(200).json({ genres: genres.rows, tracks: tracks.rows });
     }
   }
-
   return res.status(405).end();
 }
