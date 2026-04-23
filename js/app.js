@@ -46,6 +46,7 @@ function bindEvents() {
   refs.refreshBtn.addEventListener("click", () => location.reload());
   refs.clearCacheBtn.addEventListener("click", clearCache);
 
+  // Input Pencarian
   refs.searchInput.addEventListener("input", (e) => {
     state.searchQuery = e.target.value.toLowerCase();
     renderPlaylist();
@@ -64,6 +65,20 @@ function bindEvents() {
     applyTheme(state.theme);
     localStorage.setItem('theme', state.theme);
   });
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    state.deferredPrompt = e;
+    refs.installBtn.style.display = 'grid';
+  });
+
+  refs.installBtn.addEventListener('click', async () => {
+    if (state.deferredPrompt) {
+      state.deferredPrompt.prompt();
+      state.deferredPrompt = null;
+      refs.installBtn.style.display = 'none';
+    }
+  });
 }
 
 function clearCache() {
@@ -79,24 +94,24 @@ async function loadLibrary() {
     const res = await fetch("/api/library");
     const data = await res.json();
     state.library = data.genres || [];
+    
     if (state.library.length) {
-      // Set genre pertama sebagai default jika belum ada yang aktif
-      state.activeGenreId = state.activeGenreId || state.library[0].id;
+      // Selalu pilih genre pertama hasil urutan dari database (sort_order terendah)
+      state.activeGenreId = state.library[0].id;
       renderGenres();
       renderPlaylist();
     }
-  } catch (e) { console.error("Library load failed"); }
+  } catch (e) { 
+    console.error("Library load failed", e); 
+  }
 }
 
 function renderGenres() {
+  // Tombol tab akan muncul sesuai urutan sort_order dari API
   refs.genreTabs.innerHTML = state.library.map(g => `
     <button class="genre-tab ${g.id === state.activeGenreId ? "active" : ""}" 
             onclick="switchGenre(${g.id})">${g.name}</button>
   `).join("");
-
-  // Auto-scroll ke tab genre yang aktif agar terlihat
-  const activeTab = document.querySelector('.genre-tab.active');
-  if (activeTab) activeTab.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
 }
 
 window.switchGenre = (id) => {
@@ -112,11 +127,13 @@ function renderPlaylist() {
   const genreNav = document.querySelector('.genre-nav');
   
   if (state.searchQuery.trim() === "") {
+    // Mode Playlist Normal (Urutan sesuai sort_order tiap genre)
     const genre = state.library.find(g => g.id === state.activeGenreId);
     tracks = genre?.tracks || [];
-    document.getElementById("genreHeading").textContent = genre?.name || "Genre";
+    document.getElementById("genreHeading").textContent = genre?.name || "Folder";
     genreNav.classList.remove('searching');
   } else {
+    // Mode Pencarian
     document.getElementById("genreHeading").textContent = "Hasil Pencarian";
     genreNav.classList.add('searching');
     
@@ -133,7 +150,7 @@ function renderPlaylist() {
 
   refs.playlistContainer.innerHTML = tracks.map((t, i) => {
     const isActive = state.activeTrack?.id === t.id;
-    const clickAction = state.searchQuery ? `goToOriginalPlaylist('${t.id}', ${t.originGenreId})` : `selectTrack(${i})`;
+    const clickAction = state.searchQuery ? `goToOriginalPlaylist(${t.id}, ${t.originGenreId})` : `selectTrack(${i})`;
     
     return `
       <button class="track-row ${isActive ? 'active' : ''}" onclick="${clickAction}">
@@ -159,20 +176,30 @@ window.goToOriginalPlaylist = (trackId, genreId) => {
   
   const genre = state.library.find(g => g.id === genreId);
   const trackIndex = genre.tracks.findIndex(t => t.id === trackId);
-  if (trackIndex !== -1) selectTrack(trackIndex);
+  
+  if (trackIndex !== -1) {
+    selectTrack(trackIndex);
+  }
 };
 
 window.selectTrack = async (index) => {
   const genre = state.library.find(g => g.id === state.activeGenreId);
-  if (!genre) return;
   const track = genre.tracks[index];
   if (!track) return;
 
   state.activeTrack = track;
   state.activeTrackIndex = index;
   
+  // Update UI Player
   document.getElementById("nowTitle").textContent = track.title;
   document.getElementById("nowArtist").textContent = track.artist;
+
+  // Update Warna Aksen Dinamis
+  if (track.accentColor) {
+    document.documentElement.style.setProperty('--primary', track.accentColor);
+  } else {
+    document.documentElement.style.setProperty('--primary', '#ffffff');
+  }
 
   if (!state.player) {
     const tag = document.createElement('script');
@@ -185,46 +212,6 @@ window.selectTrack = async (index) => {
   }
   renderPlaylist();
 };
-
-/**
- * LOGIKA URUTAN GENRE:
- * Fungsi ini mengecek apakah track sudah mencapai batas playlist di genre saat ini.
- * Jika ya, ia akan berpindah ke genre berikutnya/sebelumnya dalam urutan library.
- */
-function navigateTrack(dir) {
-  const currentGenreIndex = state.library.findIndex(g => g.id === state.activeGenreId);
-  if (currentGenreIndex === -1) return;
-
-  const currentGenre = state.library[currentGenreIndex];
-  let nextTrackIndex = state.activeTrackIndex + dir;
-
-  if (nextTrackIndex >= currentGenre.tracks.length) {
-    // PINDAH KE GENRE BERIKUTNYA
-    let nextGenreIndex = currentGenreIndex + 1;
-    if (nextGenreIndex >= state.library.length) nextGenreIndex = 0; // Kembali ke genre pertama jika sudah di akhir
-
-    const nextGenre = state.library[nextGenreIndex];
-    state.activeGenreId = nextGenre.id;
-    renderGenres();
-    renderPlaylist();
-    selectTrack(0); // Putar lagu pertama di genre baru
-  } 
-  else if (nextTrackIndex < 0) {
-    // PINDAH KE GENRE SEBELUMNYA
-    let prevGenreIndex = currentGenreIndex - 1;
-    if (prevGenreIndex < 0) prevGenreIndex = state.library.length - 1; // Kembali ke genre terakhir jika di awal
-
-    const prevGenre = state.library[prevGenreIndex];
-    state.activeGenreId = prevGenre.id;
-    renderGenres();
-    renderPlaylist();
-    selectTrack(prevGenre.tracks.length - 1); // Putar lagu terakhir di genre sebelumnya
-  } 
-  else {
-    // Navigasi normal di genre yang sama
-    selectTrack(nextTrackIndex);
-  }
-}
 
 function createPlayer(videoId) {
   state.player = new YT.Player("youtube-player", {
@@ -239,11 +226,20 @@ function createPlayer(videoId) {
         state.isPlaying = (e.data === YT.PlayerState.PLAYING);
         refs.playPauseBtn.innerHTML = state.isPlaying ? ICONS.pause : ICONS.play;
         if (state.isPlaying) startTimer();
-        if (e.data === YT.PlayerState.ENDED) navigateTrack(1); // Otomatis ke lagu/genre berikutnya
+        if (e.data === YT.PlayerState.ENDED) navigateTrack(1);
         renderPlaylist();
       }
     }
   });
+}
+
+function navigateTrack(dir) {
+  const genre = state.library.find(g => g.id === state.activeGenreId);
+  if (!genre) return;
+  let nextIndex = state.activeTrackIndex + dir;
+  if (nextIndex >= genre.tracks.length) nextIndex = 0;
+  if (nextIndex < 0) nextIndex = genre.tracks.length - 1;
+  selectTrack(nextIndex);
 }
 
 function startTimer() {
@@ -252,10 +248,12 @@ function startTimer() {
     if (state.player && state.isPlaying) {
       const cur = state.player.getCurrentTime();
       const dur = state.player.getDuration();
-      refs.timeBar.max = dur;
-      refs.timeBar.value = cur;
-      refs.currentTime.textContent = formatTime(cur);
-      refs.durationTime.textContent = formatTime(dur);
+      if (dur > 0) {
+        refs.timeBar.max = dur;
+        refs.timeBar.value = cur;
+        refs.currentTime.textContent = formatTime(cur);
+        refs.durationTime.textContent = formatTime(dur);
+      }
     }
   }, 500);
 }
