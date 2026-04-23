@@ -13,11 +13,10 @@ export default async function handler(req, res) {
   if (req.method === 'POST') {
     const body = JSON.parse(req.body);
 
-    // LOGIN
     if (body.action === 'login') {
       if (body.code === process.env.ADMIN_ACCESS_CODE) {
         res.setHeader('Set-Cookie', serialize('session', process.env.ADMIN_SESSION_SECRET, {
-          path: '/', httpOnly: true, secure: true, sameSite: 'strict', maxAge: 3600
+          path: '/', httpOnly: true, secure: true, sameSite: 'strict', maxAge: 3600 // 1 Jam
         }));
         return res.status(200).json({ ok: true });
       }
@@ -26,7 +25,7 @@ export default async function handler(req, res) {
 
     if (!isAuth) return res.status(403).end();
 
-    // GENRE ACTIONS
+    // GENRE CRUD
     if (body.action === 'addGenre') {
       await client.execute({ sql: "INSERT INTO genres (name, slug) VALUES (?, ?)", args: [body.name, body.slug] });
       return res.status(200).json({ ok: true });
@@ -40,7 +39,7 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: true });
     }
 
-    // TRACK ACTIONS
+    // TRACK CRUD
     if (body.action === 'addTrack') {
       const url = new URL(body.youtube_url);
       const vid = url.hostname.includes('youtu.be') ? url.pathname.slice(1) : url.searchParams.get('v');
@@ -76,9 +75,11 @@ export default async function handler(req, res) {
     }
 
     if (action === 'fetchYoutube' && isAuth) {
-      const yt = await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`);
-      const data = await yt.json();
-      return res.status(200).json({ title: data.title });
+      try {
+        const yt = await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`);
+        const data = await yt.json();
+        return res.status(200).json({ title: data.title });
+      } catch (e) { return res.status(500).end(); }
     }
 
     if (action === 'getMasterData' && isAuth) {
