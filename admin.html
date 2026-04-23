@@ -3,176 +3,200 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin - YouTube Music Station</title>
+    <title>Master Admin - Music Station</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <style>
         body { background-color: #0b0f1a; color: #f8fafc; font-family: 'Inter', sans-serif; }
         .input-field { 
             background: #161b22; border: 1px solid #30363d; 
-            color: #c9d1d9; border-radius: 6px; padding: 12px; width: 100%;
-            transition: border-color 0.2s;
+            color: #c9d1d9; border-radius: 6px; padding: 10px; width: 100%;
         }
-        .input-field:focus { border-color: #58a6ff; outline: none; }
-        .btn-green { background: #238636; color: white; padding: 12px; border-radius: 6px; font-weight: 600; width: 100%; }
-        .btn-green:hover { background: #2ea043; }
+        .btn-green { background: #238636; color: white; padding: 10px; border-radius: 6px; font-weight: 600; cursor: pointer; }
+        .btn-red { background: #da3633; color: white; padding: 8px; border-radius: 6px; font-size: 12px; }
+        .card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 20px; margin-bottom: 20px; }
         .hidden { display: none; }
+        .sortable-ghost { opacity: 0.4; background: #1e293b; }
+        .handle { cursor: grab; color: #8b949e; }
     </style>
 </head>
-<body class="flex items-center justify-center min-h-screen p-4">
+<body class="p-4 md:p-8">
 
-    <div id="loginSection" class="w-full max-w-sm bg-[#161b22] p-8 rounded-lg border border-[#30363d] shadow-2xl">
-        <h1 class="text-2xl font-bold mb-6 text-center text-white">Admin Access</h1>
-        <input type="password" id="accessCode" class="input-field mb-4" placeholder="Enter Access Code">
-        <button onclick="doLogin()" class="btn-green">Login</button>
+    <div id="loginSection" class="max-w-sm mx-auto mt-20 card text-center">
+        <h1 class="text-2xl font-bold mb-6">Admin Access</h1>
+        <input type="password" id="accessCode" class="input-field mb-4 text-center" placeholder="Enter Access Code">
+        <button onclick="doLogin()" class="btn-green w-full">Login</button>
     </div>
 
-    <div id="adminSection" class="hidden w-full max-w-lg bg-[#161b22] p-8 rounded-lg border border-[#30363d] shadow-2xl">
-        <div class="flex justify-between items-center mb-6">
-            <h1 class="text-xl font-bold text-white">Input Music</h1>
-            <button onclick="doLogout()" class="text-sm text-red-400 hover:text-red-300 font-medium">Logout</button>
+    <div id="adminSection" class="hidden max-w-4xl mx-auto">
+        <div class="flex justify-between items-center mb-8">
+            <h1 class="text-2xl font-bold">Master Station Control</h1>
+            <button onclick="doLogout()" class="text-red-400 hover:underline">Logout</button>
         </div>
-        
-        <form id="trackForm" class="space-y-4">
-            <div>
-                <label class="block text-xs text-gray-400 mb-1 uppercase">YouTube URL</label>
-                <input type="url" id="youtube_url" class="input-field" placeholder="Paste link video YouTube..." required>
-                <p id="loadingMsg" class="text-xs text-blue-400 mt-1 hidden">⚡ Memproses data video...</p>
-            </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-xs text-gray-400 mb-1 uppercase">Judul Lagu</label>
-                    <input type="text" id="title" class="input-field" placeholder="Judul" required>
-                </div>
-                <div>
-                    <label class="block text-xs text-gray-400 mb-1 uppercase">Artis</label>
-                    <input type="text" id="artist" class="input-field" placeholder="Nama Artis">
-                </div>
-            </div>
+        <div class="card">
+            <h2 class="text-lg font-bold mb-4 text-blue-400">Add New Track</h2>
+            <form id="trackForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <input type="url" id="yt_url" class="input-field md:col-span-2" placeholder="Paste YouTube URL..." required>
+                <input type="text" id="t_title" class="input-field" placeholder="Track Title" required>
+                <input type="text" id="t_artist" class="input-field" placeholder="Artist">
+                <select id="t_genre" class="input-field" required></select>
+                <input type="color" id="t_color" class="h-10 w-full bg-transparent border-none" value="#01696f">
+                <button type="submit" class="btn-green md:col-span-2">Save Track</button>
+            </form>
+        </div>
 
-            <div>
-                <label class="block text-xs text-gray-400 mb-1 uppercase">Genre</label>
-                <select id="genre_id" class="input-field" required>
-                    <option value="">Memuat genre...</option>
-                </select>
+        <div class="card">
+            <h2 class="text-lg font-bold mb-4 text-green-400">Manage Genres</h2>
+            <div class="flex gap-2 mb-4">
+                <input type="text" id="new_genre_name" class="input-field" placeholder="New Genre Name">
+                <button onclick="addGenre()" class="btn-green whitespace-nowrap px-6">+ Add</button>
             </div>
+            <div id="genreList" class="space-y-2"></div>
+        </div>
 
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-xs text-gray-400 mb-1 uppercase">Cover URL (Opsional)</label>
-                    <input type="url" id="cover_url" class="input-field" placeholder="https://...">
-                </div>
-                <div>
-                    <label class="block text-xs text-gray-400 mb-1 uppercase">Warna Aksen</label>
-                    <input type="color" id="accent_color" class="h-12 w-full bg-transparent border-none cursor-pointer" value="#01696f">
-                </div>
-            </div>
-
-            <button type="submit" id="submitBtn" class="btn-green mt-4">Save to Database</button>
-        </form>
+        <h2 class="text-xl font-bold mb-4">Track Management</h2>
+        <div id="trackManagerSection" class="space-y-6"></div>
     </div>
 
     <script>
-        // Fungsi merubah teks menjadi Capitalize Each Word
-        function capitalize(str) {
-            return str.toLowerCase().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-        }
-
-        async function checkSession() {
-            const res = await fetch('/api/admin?action=check');
-            if (res.ok) showAdmin();
-        }
-
-        function showAdmin() {
-            document.getElementById('loginSection').classList.add('hidden');
-            document.getElementById('adminSection').classList.remove('hidden');
-            loadGenres();
-        }
+        const capitalize = (s) => s.toLowerCase().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+        const toSlug = (s) => s.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '');
 
         async function doLogin() {
             const code = document.getElementById('accessCode').value;
-            const res = await fetch('/api/admin', {
-                method: 'POST',
-                body: JSON.stringify({ action: 'login', code })
-            });
-            if (res.ok) showAdmin();
-            else alert('Access Code Salah!');
+            const res = await fetch('/api/admin', { method: 'POST', body: JSON.stringify({ action: 'login', code }) });
+            if (res.ok) location.reload(); else alert('Invalid Code');
         }
 
         async function doLogout() {
-            await fetch('/api/admin?action=logout'); // Hapus session di server
-            document.getElementById('adminSection').classList.add('hidden');
-            document.getElementById('loginSection').classList.remove('hidden');
-            document.getElementById('accessCode').value = "";
+            await fetch('/api/admin?action=logout');
+            location.reload();
         }
 
-        async function loadGenres() {
-            const res = await fetch('/api/admin?action=getGenres');
-            if (!res.ok) return doLogout(); // Jika session habis (1 jam)
-            const genres = await res.json();
-            const select = document.getElementById('genre_id');
-            select.innerHTML = genres.map(g => `<option value="${g.id}">${g.name}</option>`).join('');
+        async function loadData() {
+            const res = await fetch('/api/admin?action=getMasterData');
+            if (!res.ok) return;
+            const { genres, tracks } = await res.json();
+            
+            // Render Select Genre
+            document.getElementById('t_genre').innerHTML = genres.map(g => `<option value="${g.id}">${g.name}</option>`).join('');
+            
+            // Render Genre Management
+            document.getElementById('genreList').innerHTML = genres.map(g => `
+                <div class="flex items-center gap-2 bg-[#0d1117] p-2 rounded">
+                    <input type="text" value="${g.name}" class="input-field text-sm" onchange="updateGenre(${g.id}, this.value)">
+                    <button onclick="deleteGenre(${g.id})" class="text-red-500 p-2">✕</button>
+                </div>
+            `).join('');
+
+            // Render Track Manager (per Genre)
+            const manager = document.getElementById('trackManagerSection');
+            manager.innerHTML = '';
+
+            genres.forEach(genre => {
+                const genreTracks = tracks.filter(t => t.genre_id === genre.id).sort((a,b) => a.sort_order - b.sort_order);
+                const section = document.createElement('div');
+                section.className = 'card bg-[#0d1117]';
+                section.innerHTML = `
+                    <h3 class="font-bold border-b border-gray-700 pb-2 mb-4 text-gray-300 uppercase text-sm tracking-widest">${genre.name}</h3>
+                    <div class="space-y-2 sortable-list" data-genre-id="${genre.id}">
+                        ${genreTracks.map(t => `
+                            <div class="flex items-center gap-3 bg-[#161b22] p-3 rounded border border-gray-800" data-id="${t.id}">
+                                <span class="handle">⠿</span>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-medium truncate">${t.title}</p>
+                                    <p class="text-xs text-gray-500 truncate">${t.artist || 'Unknown'}</p>
+                                </div>
+                                <button onclick="deleteTrack(${t.id})" class="text-red-400 text-xs">Delete</button>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                manager.appendChild(section);
+
+                // Initialize Drag & Drop
+                new Sortable(section.querySelector('.sortable-list'), {
+                    handle: '.handle',
+                    animation: 150,
+                    ghostClass: 'sortable-ghost',
+                    onEnd: (evt) => {
+                        const items = Array.from(evt.to.children).map((el, index) => ({
+                            id: el.dataset.id,
+                            sort_order: index
+                        }));
+                        updateOrder(items);
+                    }
+                });
+            });
         }
 
-        // AUTO-FILL LOGIC
-        document.getElementById('youtube_url').addEventListener('input', async (e) => {
+        // Action Functions
+        async function addGenre() {
+            const name = document.getElementById('new_genre_name').value;
+            if(!name) return;
+            await fetch('/api/admin', { method: 'POST', body: JSON.stringify({ action: 'addGenre', name, slug: toSlug(name) }) });
+            location.reload();
+        }
+
+        async function updateGenre(id, name) {
+            await fetch('/api/admin', { method: 'POST', body: JSON.stringify({ action: 'updateGenre', id, name, slug: toSlug(name) }) });
+        }
+
+        async function deleteGenre(id) {
+            if(confirm('Hapus genre? Semua lagu di dalamnya akan ikut terhapus!')) {
+                await fetch('/api/admin', { method: 'POST', body: JSON.stringify({ action: 'deleteGenre', id }) });
+                location.reload();
+            }
+        }
+
+        async function deleteTrack(id) {
+            if(confirm('Hapus lagu ini?')) {
+                await fetch('/api/admin', { method: 'POST', body: JSON.stringify({ action: 'deleteTrack', id }) });
+                location.reload();
+            }
+        }
+
+        async function updateOrder(items) {
+            await fetch('/api/admin', { method: 'POST', body: JSON.stringify({ action: 'updateOrder', items }) });
+        }
+
+        // YouTube Auto-fill
+        document.getElementById('yt_url').addEventListener('input', async (e) => {
             const url = e.target.value;
             if (url.includes('youtube.com/') || url.includes('youtu.be/')) {
-                document.getElementById('loadingMsg').classList.remove('hidden');
-                try {
-                    const res = await fetch(`/api/admin?action=fetchYoutube&url=${encodeURIComponent(url)}`);
-                    if (res.ok) {
-                        const data = await res.json();
-                        let raw = data.title || "";
-                        let artist = "";
-                        let title = raw;
-
-                        // Pecah jika ada format "Artis - Judul"
-                        if (raw.includes(' - ')) [artist, title] = raw.split(' - ');
-                        else if (raw.includes(' | ')) [artist, title] = raw.split(' | ');
-
-                        // Bersihkan embel-embel
-                        title = title.replace(/\(Official.*\)|\[.*\]|Video Klip|Lirik/gi, '').trim();
-                        
-                        document.getElementById('title').value = capitalize(title);
-                        document.getElementById('artist').value = capitalize(artist.trim());
-                    }
-                } catch (err) { console.error(err); }
-                finally { document.getElementById('loadingMsg').classList.add('hidden'); }
+                const res = await fetch(`/api/admin?action=fetchYoutube&url=${encodeURIComponent(url)}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    let [artist, title] = data.title.includes(' - ') ? data.title.split(' - ') : ['', data.title];
+                    document.getElementById('t_title').value = capitalize(title.replace(/\(Official.*\)|\[.*\]/gi, '').trim());
+                    document.getElementById('t_artist').value = capitalize(artist.trim());
+                }
             }
         });
 
         document.getElementById('trackForm').onsubmit = async (e) => {
             e.preventDefault();
-            const btn = document.getElementById('submitBtn');
-            btn.innerText = 'Saving...';
-            btn.disabled = true;
-
-            const res = await fetch('/api/admin', {
-                method: 'POST',
-                body: JSON.stringify({
-                    action: 'addTrack',
-                    genre_id: document.getElementById('genre_id').value,
-                    title: document.getElementById('title').value,
-                    artist: document.getElementById('artist').value,
-                    youtube_url: document.getElementById('youtube_url').value,
-                    cover_url: document.getElementById('cover_url').value,
-                    accent_color: document.getElementById('accent_color').value
-                })
-            });
-
-            if (res.ok) {
-                alert('Success!');
-                e.target.reset();
-            } else {
-                alert('Failed to save.');
-                doLogout();
-            }
-            btn.innerText = 'Save to Database';
-            btn.disabled = false;
+            await fetch('/api/admin', { method: 'POST', body: JSON.stringify({
+                action: 'addTrack',
+                genre_id: document.getElementById('t_genre').value,
+                title: document.getElementById('t_title').value,
+                artist: document.getElementById('t_artist').value,
+                youtube_url: document.getElementById('yt_url').value,
+                accent_color: document.getElementById('t_color').value
+            })});
+            location.reload();
         };
 
-        checkSession();
+        async function init() {
+            const res = await fetch('/api/admin?action=check');
+            if(res.ok) {
+                document.getElementById('loginSection').classList.add('hidden');
+                document.getElementById('adminSection').classList.remove('hidden');
+                loadData();
+            }
+        }
+        init();
     </script>
 </body>
 </html>
