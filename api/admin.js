@@ -10,7 +10,6 @@ export default async function handler(req, res) {
   const cookies = parse(req.headers.cookie || '');
   const isAuthorized = cookies.session === process.env.ADMIN_SESSION_SECRET;
 
-  // HANDLE POST REQUESTS
   if (req.method === 'POST') {
     const body = JSON.parse(req.body);
 
@@ -21,25 +20,20 @@ export default async function handler(req, res) {
           httpOnly: true,
           secure: true,
           sameSite: 'strict',
-          maxAge: 60 * 60 * 24 // 24 Jam
+          maxAge: 3600 // OTOMATIS LOGOUT SETELAH 1 JAM (3600 detik)
         }));
         return res.status(200).json({ success: true });
       }
       return res.status(401).json({ message: 'Unauthorized' });
     }
 
-    if (!isAuthorized) return res.status(403).json({ message: 'Forbidden' });
+    if (!isAuthorized) return res.status(403).json({ message: 'Session Expired' });
 
     if (body.action === 'addTrack') {
       try {
-        // Otomatis ekstrak Video ID dari URL YouTube
         let videoId = "";
         const urlObj = new URL(body.youtube_url);
-        if (urlObj.hostname.includes('youtu.be')) {
-          videoId = urlObj.pathname.slice(1);
-        } else {
-          videoId = urlObj.searchParams.get('v');
-        }
+        videoId = urlObj.hostname.includes('youtu.be') ? urlObj.pathname.slice(1) : urlObj.searchParams.get('v');
 
         await client.execute({
           sql: `INSERT INTO tracks (genre_id, title, artist, youtube_url, youtube_video_id, cover_url, accent_color) 
@@ -53,12 +47,22 @@ export default async function handler(req, res) {
     }
   }
 
-  // HANDLE GET REQUESTS
   if (req.method === 'GET') {
-    const { action } = req.query;
+    const { action, url } = req.query;
 
     if (action === 'check') {
       return isAuthorized ? res.status(200).json({ ok: true }) : res.status(401).end();
+    }
+
+    // PROXY UNTUK FETCH INFO YOUTUBE (Menghindari CORS)
+    if (action === 'fetchYoutube' && isAuthorized) {
+        try {
+            const ytRes = await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`);
+            const data = await ytRes.json();
+            return res.status(200).json({ title: data.title });
+        } catch (e) {
+            return res.status(500).json({ error: "Gagal mengambil data YouTube" });
+        }
     }
 
     if (action === 'getGenres' && isAuthorized) {
