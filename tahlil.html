@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yasin & Tahlil API</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Amiri&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0b0f1a;
+            --card: #161b2c;
+            --accent: #34d399;
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            padding-bottom: 50px;
+        }
+
+        /* Navbar & Header */
+        header {
+            padding: 2rem 1rem;
+            text-align: center;
+            background: linear-gradient(to bottom, #161b2c, #0b0f1a);
+        }
+
+        .tab-nav {
+            position: sticky;
+            top: 0;
+            background: rgba(11, 15, 26, 0.8);
+            backdrop-filter: blur(12px);
+            display: flex;
+            justify-content: center;
+            padding: 10px;
+            gap: 10px;
+            z-index: 1000;
+            border-bottom: 1px solid #2d3748;
+        }
+
+        .tab-btn {
+            background: #1e293b;
+            border: 1px solid #334155;
+            color: var(--text-muted);
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: 0.3s;
+        }
+
+        .tab-btn.active {
+            background: var(--accent);
+            color: #0b0f1a;
+            font-weight: 600;
+            border-color: var(--accent);
+        }
+
+        /* Content */
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 0 15px;
+        }
+
+        .loader {
+            text-align: center;
+            padding: 50px;
+            display: none;
+        }
+
+        .card {
+            background: var(--card);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border: 1px solid #2d3748;
+            transition: transform 0.2s;
+        }
+
+        .arabic {
+            font-family: 'Amiri', serif;
+            font-size: 1.8rem;
+            text-align: right;
+            line-height: 2.5;
+            margin-bottom: 15px;
+            color: #fff;
+        }
+
+        .translation {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        .nomor {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border: 1px solid var(--accent);
+            border-radius: 50%;
+            text-align: center;
+            line-height: 28px;
+            font-size: 0.8rem;
+            color: var(--accent);
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>Majelis Digital</h1>
+    <p style="color: var(--text-muted); font-size: 0.8rem; margin-top: 5px;">Yasin, Tahlil & Doa dalam genggaman</p>
+</header>
+
+<div class="tab-nav">
+    <button class="tab-btn active" onclick="loadContent('tahlil', this)">Tahlil</button>
+    <button class="tab-btn" onclick="loadContent('yasin', this)">Yasin</button>
+    <button class="tab-btn" onclick="loadContent('doa', this)">Doa</button>
+</div>
+
+<div class="container">
+    <div id="loader" class="loader">Memuat data...</div>
+    <div id="main-content">
+        </div>
+</div>
+
+<script>
+    const contentDiv = document.getElementById('main-content');
+    const loader = document.getElementById('loader');
+
+    // URLs API
+    const API_YASIN = "https://equran.id/api/v2/surat/36";
+    const API_TAHLIL = "https://islamic-api-zhirrr.vercel.app/api/tahlil";
+    const API_DOA = "https://islamic-api-zhirrr.vercel.app/api/doatahlil";
+
+    async function loadContent(type, btn) {
+        // Update active button
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        contentDiv.innerHTML = '';
+        loader.style.display = 'block';
+        window.scrollTo(0, 0);
+
+        try {
+            if (type === 'yasin') {
+                const res = await fetch(API_YASIN);
+                const data = await res.json();
+                renderYasin(data.data.ayat);
+            } else if (type === 'tahlil') {
+                const res = await fetch(API_TAHLIL);
+                const data = await res.json();
+                renderGeneral(data.data);
+            } else if (type === 'doa') {
+                const res = await fetch(API_DOA);
+                const data = await res.json();
+                renderGeneral(data.data);
+            }
+        } catch (error) {
+            contentDiv.innerHTML = `<p style="text-align:center; color:red;">Gagal memuat data. Silakan coba lagi.</p>`;
+        } finally {
+            loader.style.display = 'none';
+        }
+    }
+
+    function renderYasin(ayats) {
+        let html = '';
+        ayats.forEach(ayat => {
+            html += `
+                <div class="card">
+                    <div class="nomor">${ayat.nomorAyat}</div>
+                    <div class="arabic">${ayat.teksArab}</div>
+                    <div class="translation">${ayat.teksIndonesia}</div>
+                </div>
+            `;
+        });
+        contentDiv.innerHTML = html;
+    }
+
+    function renderGeneral(items) {
+        let html = '';
+        items.forEach((item, index) => {
+            html += `
+                <div class="card">
+                    <div class="nomor">${index + 1}</div>
+                    <h3 style="margin-bottom:10px; color:var(--accent); font-size:1rem;">${item.title || item.doa}</h3>
+                    <div class="arabic">${item.arabic}</div>
+                    <div class="translation">${item.translation || item.id}</div>
+                </div>
+            `;
+        });
+        contentDiv.innerHTML = html;
+    }
+
+    // Load tahlil by default
+    window.onload = () => {
+        document.querySelector('.tab-btn').click();
+    };
+</script>
+
+</body>
+</html>
