@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yasin & Tahlil API</title>
+    <title>Majelis Digital - Tahlil</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Amiri&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -22,7 +22,6 @@
             padding-bottom: 50px;
         }
 
-        /* Navbar & Header */
         header {
             padding: 2rem 1rem;
             text-align: center;
@@ -60,7 +59,6 @@
             border-color: var(--accent);
         }
 
-        /* Content */
         .container {
             max-width: 800px;
             margin: 20px auto;
@@ -79,7 +77,6 @@
             padding: 20px;
             margin-bottom: 15px;
             border: 1px solid #2d3748;
-            transition: transform 0.2s;
         }
 
         .arabic {
@@ -89,12 +86,23 @@
             line-height: 2.5;
             margin-bottom: 15px;
             color: #fff;
+            direction: rtl;
+        }
+
+        .latin {
+            font-style: italic;
+            font-size: 0.95rem;
+            color: var(--accent);
+            margin-bottom: 10px;
+            line-height: 1.6;
         }
 
         .translation {
             font-size: 0.9rem;
             color: var(--text-muted);
             line-height: 1.5;
+            border-top: 1px solid #2d3748;
+            padding-top: 10px;
         }
 
         .nomor {
@@ -115,7 +123,7 @@
 
 <header>
     <h1>Majelis Digital</h1>
-    <p style="color: var(--text-muted); font-size: 0.8rem; margin-top: 5px;">Yasin, Tahlil & Doa dalam genggaman</p>
+    <p style="color: var(--text-muted); font-size: 0.8rem; margin-top: 5px;">Yasin, Tahlil & Doa sesuai panduan</p>
 </header>
 
 <div class="tab-nav">
@@ -126,21 +134,42 @@
 
 <div class="container">
     <div id="loader" class="loader">Memuat data...</div>
-    <div id="main-content">
-        </div>
+    <div id="main-content"></div>
 </div>
 
 <script>
     const contentDiv = document.getElementById('main-content');
     const loader = document.getElementById('loader');
 
-    // URLs API
-    const API_YASIN = "https://equran.id/api/v2/surat/36";
-    const API_TAHLIL = "https://islamic-api-zhirrr.vercel.app/api/tahlil";
-    const API_DOA = "https://islamic-api-zhirrr.vercel.app/api/doatahlil";
+    // Data Tahlil Berdasarkan Gambar (Hal 45-52)
+    const DATA_TAHLIL_LOKAL = [
+        {
+            title: "Hadlarah Rasulullah SAW",
+            arabic: "اِلَى حَضْرَةِ النَّبِيِّ الْمُصْطَفَى صَلَّى اللهُ عَلَيْهِ وَسَلَّمَ وَاٰلِهِ وَاَزْوَاجِهِ وَاَوْلَادِهِ وَذُرِّيَّاتِهِ، اَلْفَاتِحَة",
+            latin: "Ilaa hadharatin nabiyyil mushthafaa shallallaahu 'alaihi wa sallama wa aalihii wa azwaajihii wa aulaadihii wa dzurriyyaatihii, Al-Faatihah:",
+            translation: "Semoga ke hadirat Nabi Muhammad Saw., keluarganya, para istrinya, anak-anaknya, dan para keturunannya, Al-Fatihah."
+        },
+        {
+            title: "Hadlarah Para Nabi, Sahabat, dan Syaikh Abdul Qadir Al-Jailani",
+            arabic: "ثُمَّ اِلَى حَضْرَةِ اِخْوَانِهِ مِنَ الْاَنْبِيَاءِ وَالْمُرْسَلِيْنَ وَالْاَوْلِيَاءِ وَالشُّهَدَاءِ وَالصَّالِحِيْنَ وَالصَّحَابَةِ وَالتَّابِعِيْنَ وَالْعُلَمَاءِ الْعَامِلِيْنَ وَالْمُصَنِّفِيْنَ الْمُخْلِصِيْنَ وَجَمِيْعِ الْمَلَائِكَةِ الْمُقَرَّبِيْنَ، خُصُوْصًا سَيِّدِنَا الشَّيْخِ عَبْدِ الْقَادِرِ الْجَيْلَانِيِّ، اَلْفَاتِحَة",
+            latin: "Tsumma ilaa hadharaati ikhwaanihii minal ambiyaa-i wal mursaliin, wal auliyaa-i wassyuhadaa-i wasshhaalihiin, wal mushannifiinal mukhlishiin, wa jamii'il malaa-ikatil muqarrabiin, khushushan Sayyidinasy-Syaikha 'Abdul Qaadir Al-Jailaanii, Al-Faatihah:",
+            translation: "Semoga juga tertuju kepada para nabi dan rasul, para wali, orang-orang yang mati syahid, orang saleh, para sahabat, tabiin, para ulama yang mengamalkan ilmunya, para pengarang yang ikhlas, dan kepada para malaikat yang selalu mendekatkan diri kepada Allah Swt., terutama penghulu kita Syekh Abdul Qadir Jailani, Al-Fatihah."
+        },
+        {
+            title: "Ahli Kubur Seluruh Muslimin",
+            arabic: "ثُمَّ اِلَى جَمِيْعِ اَهْلِ الْقُبُوْرِ مِنَ الْمُسْلِمِيْنَ وَالْمُسْلِمَاتِ وَالْمُؤْمِنِيْنَ وَالْمُؤْمِنَاتِ مِنْ مَشَارِقِ الْاَرْضِ اِلَى مَغَارِبِهَا بَرِّهَا وَبَحْرِهَا، خُصُوْصًا اٰبَاءَنَا وَاُمَّهَاتِنَا وَاَجْدَادَنَا وَجَدَّاتِنَا وَمَشَايِخَنَا وَمَشَايِخَ مَشَايِخِنَا وَاَسَاتِذَتِنَا وَاَسَاتِذَةِ اَسَاتِذَتِنَا وَلِمَنِ اجْتَمَعْنَا هٰهُنَا بِسَبَبِهِ، اَلْفَاتِحَة",
+            latin: "Tsumma ilaa jamii'i ahlil qubuur, minal muslimiina wal muslimaat, wal mu'miniina wal mu'minaat, mim masyaariqil ardhi ilaa maghaaribihaa barrihaa wa bahrihaa. Khushushan ilaa aabaa-inaa wa ummahaatinaa wa ajdaadinaa wa jaddaatinaa wa masyaayikhinaa wa masyaayikhi masyaayikhinaa wa asaatidzatinaa wa asaatidzati asaatidzatinaa wa limanij-tama'naa haahunaa bisababihii, Al-Faatihah:",
+            translation: "Juga kepada seluruh ahli kubur dari kaum muslimin, muslimat, mukminin, mukminat dari belahan bumi sebelah timur sampai barat, baik yang di daratan maupun yang di lautan; khususnya kepada para bapak, ibu, kakek, nenek, para guru, guru besar kami, kepada ustadz kami dan ustadznya ustadz kami, dan kepada orang yang menyebabkan kami semua dapat berkumpul di sini, Al-Fatihah."
+        },
+        {
+            title: "Surah Al-Ikhlas (3x)",
+            arabic: "بِسْمِ اللهِ الرَّحْمٰنِ الرَّحِيْمِ. قُلْ هُوَ اللهُ اَحَدٌ. اَللهُ الصَّمَدُ. لَمْ يَلِدْ وَلَمْ يُوْلَدْ. وَلَمْ يَكُنْ لَّهُ كُفُوًا اَحَدٌ (×٣)",
+            latin: "Bismillaahir-rahmaanir-rahiim. Qul huwallaahu ahad. Allaahush-shamad. Lam yalid wa lam yuulad. Wa lam yakul lahuu kufuwan ahad (3x).",
+            translation: "Dengan menyebut nama Allah yang Maha Pemurah lagi Maha Penyayang. Katakanlah: Dialah Allah, Yang Maha Esa. Allah adalah Tuhan yang bergantung kepada-Nya segala sesuatu. Dia tiada beranak dan tidak pula diperanakkan, dan tidak ada seorangpun yang setara dengan Dia."
+        }
+    ];
 
     async function loadContent(type, btn) {
-        // Update active button
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
 
@@ -149,28 +178,43 @@
         window.scrollTo(0, 0);
 
         try {
-            if (type === 'yasin') {
-                const res = await fetch(API_YASIN);
+            if (type === 'tahlil') {
+                // Menggunakan data hasil konversi gambar
+                renderTahlilManual(DATA_TAHLIL_LOKAL);
+            } else if (type === 'yasin') {
+                const res = await fetch("https://equran.id/api/v2/surat/36");
                 const data = await res.json();
                 renderYasin(data.data.ayat);
-            } else if (type === 'tahlil') {
-                const res = await fetch(API_TAHLIL);
-                const data = await res.json();
-                renderGeneral(data.data);
             } else if (type === 'doa') {
-                const res = await fetch(API_DOA);
+                const res = await fetch("https://islamic-api-zhirrr.vercel.app/api/doatahlil");
                 const data = await res.json();
                 renderGeneral(data.data);
             }
         } catch (error) {
-            contentDiv.innerHTML = `<p style="text-align:center; color:red;">Gagal memuat data. Silakan coba lagi.</p>`;
+            contentDiv.innerHTML = `<p style="text-align:center; color:red;">Gagal memuat data. Periksa koneksi internet.</p>`;
         } finally {
             loader.style.display = 'none';
         }
     }
 
-    function renderYasin(ayats) {
+    function renderTahlilManual(items) {
         let html = '';
+        items.forEach((item, index) => {
+            html += `
+                <div class="card">
+                    <div class="nomor">${index + 1}</div>
+                    <h3 style="margin-bottom:15px; color:var(--accent); font-size:1.1rem;">${item.title}</h3>
+                    <div class="arabic">${item.arabic}</div>
+                    <div class="latin">${item.latin}</div>
+                    <div class="translation"><strong>Artinya:</strong> ${item.translation}</div>
+                </div>
+            `;
+        });
+        contentDiv.innerHTML = html;
+    }
+
+    function renderYasin(ayats) {
+        let html = '<h2 style="text-align:center; margin-bottom:20px; color:var(--accent);">Surah Yasin</h2>';
         ayats.forEach(ayat => {
             html += `
                 <div class="card">
@@ -198,7 +242,6 @@
         contentDiv.innerHTML = html;
     }
 
-    // Load tahlil by default
     window.onload = () => {
         document.querySelector('.tab-btn').click();
     };
