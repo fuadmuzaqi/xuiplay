@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web3 Token Chart Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #0f172a; /* Slate 900 */
+            color: #f8fafc; /* Slate 50 */
+        }
+        /* Responsif Chart Container */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 600px;
+            overflow: hidden;
+            border-radius: 0.75rem;
+            border: 1px solid #334155;
+        }
+        .chart-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 0;
+        }
+        @media (max-width: 768px) {
+            .chart-container {
+                height: 500px;
+            }
+        }
+        /* Loading Spinner */
+        .loader {
+            border: 4px solid #334155;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased selection:bg-blue-500 selection:text-white">
+
+    <!-- Navbar & Search Area -->
+    <header class="bg-slate-800 border-b border-slate-700 sticky top-0 z-10 shadow-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="flex items-center gap-2">
+                <svg class="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                <h1 class="text-xl font-bold tracking-tight">DexTracker</h1>
+            </div>
+            
+            <form id="searchForm" class="w-full md:max-w-lg relative flex items-center">
+                <input 
+                    type="text" 
+                    id="searchInput" 
+                    placeholder="Masukkan Smart Contract (contoh: 0x...)" 
+                    class="w-full bg-slate-900 border border-slate-600 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-3 pr-24 placeholder-slate-400 transition-colors"
+                    required
+                >
+                <button 
+                    type="submit" 
+                    class="absolute right-1 text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-800 font-medium rounded-md text-sm px-4 py-2 transition-colors"
+                >
+                    Cari
+                </button>
+            </form>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full flex flex-col gap-6">
+        
+        <!-- Status Messages -->
+        <div id="loadingState" class="hidden flex-col items-center justify-center py-12 gap-4">
+            <div class="loader"></div>
+            <p class="text-slate-400">Mencari data token...</p>
+        </div>
+        
+        <div id="errorState" class="hidden bg-red-900/50 border border-red-500/50 text-red-200 px-4 py-3 rounded-lg text-sm text-center">
+            Token tidak ditemukan atau terjadi kesalahan jaringan. Pastikan contract address benar.
+        </div>
+
+        <div id="welcomeState" class="flex flex-col items-center justify-center py-20 text-center gap-2 text-slate-400">
+            <svg class="w-16 h-16 opacity-50 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            <p class="text-lg">Cari smart contract untuk menampilkan chart.</p>
+            <p class="text-sm">Support jaringan Ethereum, Solana, BSC, Base, dan lainnya.</p>
+        </div>
+
+        <!-- Token Data Dashboard -->
+        <div id="dashboard" class="hidden flex-col gap-6">
+            
+            <!-- Token Info Cards -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="bg-slate-800 border border-slate-700 p-4 rounded-xl flex flex-col justify-center">
+                    <p class="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1">Token Info</p>
+                    <h2 id="tokenName" class="text-lg font-bold truncate">--</h2>
+                    <p id="tokenChain" class="text-xs text-blue-400 font-medium">--</p>
+                </div>
+                <div class="bg-slate-800 border border-slate-700 p-4 rounded-xl flex flex-col justify-center">
+                    <p class="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1">Harga (USD)</p>
+                    <h2 id="tokenPrice" class="text-xl font-bold tracking-tight">$--</h2>
+                    <p id="tokenChange" class="text-sm font-medium">--% (24j)</p>
+                </div>
+                <div class="bg-slate-800 border border-slate-700 p-4 rounded-xl flex flex-col justify-center">
+                    <p class="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1">Likuiditas</p>
+                    <h2 id="tokenLiquidity" class="text-xl font-bold tracking-tight">$--</h2>
+                </div>
+                <div class="bg-slate-800 border border-slate-700 p-4 rounded-xl flex flex-col justify-center">
+                    <p class="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1">Volume (24j)</p>
+                    <h2 id="tokenVolume" class="text-xl font-bold tracking-tight">$--</h2>
+                </div>
+            </div>
+
+            <!-- Chart Iframe -->
+            <div class="chart-container shadow-xl">
+                <iframe id="chartFrame" src="" title="Dexscreener Chart"></iframe>
+            </div>
+
+            <div class="text-center">
+                <a id="dexLink" href="#" target="_blank" rel="noopener noreferrer" class="text-sm text-blue-400 hover:text-blue-300 inline-flex items-center gap-1 transition-colors">
+                    Buka di Dexscreener <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <footer class="border-t border-slate-800 mt-auto py-6 text-center text-slate-500 text-xs">
+        <p>Data disediakan oleh Dexscreener API. Dibuat untuk pemantauan Real-Time.</p>
+    </footer>
+
+    <!-- Logic Script -->
+    <script>
+        const searchForm = document.getElementById('searchForm');
+        const searchInput = document.getElementById('searchInput');
+        
+        // UI States
+        const loadingState = document.getElementById('loadingState');
+        const errorState = document.getElementById('errorState');
+        const welcomeState = document.getElementById('welcomeState');
+        const dashboard = document.getElementById('dashboard');
+
+        // Data Elements
+        const tokenNameEl = document.getElementById('tokenName');
+        const tokenChainEl = document.getElementById('tokenChain');
+        const tokenPriceEl = document.getElementById('tokenPrice');
+        const tokenChangeEl = document.getElementById('tokenChange');
+        const tokenLiquidityEl = document.getElementById('tokenLiquidity');
+        const tokenVolumeEl = document.getElementById('tokenVolume');
+        const chartFrame = document.getElementById('chartFrame');
+        const dexLink = document.getElementById('dexLink');
+
+        // Formatter Uang
+        const formatCurrency = (value) => {
+            if (!value) return '$0.00';
+            const num = parseFloat(value);
+            if (num < 0.01) return '$' + num.toPrecision(4); // Untuk harga token micin
+            return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(num);
+        };
+
+        const formatNumber = (value) => {
+            if (!value) return '$0';
+            return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(value);
+        };
+
+        const showState = (state) => {
+            loadingState.classList.add('hidden');
+            errorState.classList.add('hidden');
+            welcomeState.classList.add('hidden');
+            dashboard.classList.add('hidden');
+            
+            if(state === 'loading') loadingState.classList.remove('hidden');
+            if(state === 'error') errorState.classList.remove('hidden');
+            if(state === 'success') dashboard.classList.remove('hidden');
+            if(state === 'welcome') welcomeState.classList.remove('hidden');
+        };
+
+        searchForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const query = searchInput.value.trim();
+            if (!query) return;
+
+            showState('loading');
+
+            try {
+                // Fetch ke API v1 Dexscreener
+                const response = await fetch(`https://api.dexscreener.com/latest/dex/search?q=${query}`);
+                const data = await response.json();
+
+                if (data.pairs && data.pairs.length > 0) {
+                    // Ambil pair dengan likuiditas paling tinggi (biasanya index 0)
+                    const pair = data.pairs[0];
+
+                    // Update UI Info
+                    tokenNameEl.textContent = `${pair.baseToken.name} (${pair.baseToken.symbol})`;
+                    tokenChainEl.textContent = `${pair.chainId.toUpperCase()} / ${pair.dexId.toUpperCase()}`;
+                    
+                    tokenPriceEl.textContent = formatCurrency(pair.priceUsd);
+                    
+                    // Handle persentase perubahan harga
+                    const change24h = pair.priceChange.h24;
+                    tokenChangeEl.textContent = `${change24h}% (24j)`;
+                    if (change24h >= 0) {
+                        tokenChangeEl.className = 'text-sm font-medium text-green-400';
+                    } else {
+                        tokenChangeEl.className = 'text-sm font-medium text-red-400';
+                    }
+
+                    tokenLiquidityEl.textContent = formatNumber(pair.liquidity?.usd);
+                    tokenVolumeEl.textContent = formatNumber(pair.volume?.h24);
+
+                    // Update Iframe Chart Embed
+                    // Format embed Dexscreener: https://dexscreener.com/chain/pairAddress?embed=1&theme=dark
+                    chartFrame.src = `https://dexscreener.com/${pair.chainId}/${pair.pairAddress}?embed=1&theme=dark`;
+                    
+                    dexLink.href = pair.url;
+
+                    showState('success');
+                } else {
+                    showState('error');
+                    welcomeState.classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error("Gagal mengambil data:", error);
+                showState('error');
+                welcomeState.classList.remove('hidden');
+            }
+        });
+    </script>
+</body>
+</html>
