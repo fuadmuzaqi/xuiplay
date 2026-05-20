@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CryptoPulse - Cek Harga Token Real-time</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: radial-gradient(circle at top right, #1e1b4b, #0f172a, #020617);
+            min-height: 100vh;
+        }
+        .glass-card {
+            background: rgba(30, 41, 59, 0.45);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .glass-input {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+        .glass-input:focus {
+            border-color: #6366f1;
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.2);
+            outline: none;
+        }
+        .glow-green {
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+        }
+        .glow-indigo {
+            box-shadow: 0 0 25px rgba(99, 102, 241, 0.3);
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+    </style>
+</head>
+<body class="text-slate-100 antialiased px-4 py-6 md:py-12">
+
+    <div class="max-w-md mx-auto space-y-6">
+        
+        <!-- Header Section -->
+        <header class="flex items-center justify-between px-2">
+            <div class="flex items-center gap-3">
+                <div class="bg-indigo-600 w-10 h-10 rounded-xl flex items-center justify-center glow-indigo">
+                    <i class="fa-solid fa-bolt text-xl text-white"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-200 to-slate-400">CryptoPulse</h1>
+                    <p class="text-xs text-slate-400 font-medium">CoinGecko Real-time Tracker</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-full">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse glow-green"></span>
+                <span class="text-xs font-semibold text-emerald-400">Live Client</span>
+            </div>
+        </header>
+
+        <!-- Search & Suggestions Box -->
+        <div class="relative">
+            <div class="relative flex items-center">
+                <i class="fa-solid fa-magnifying-glass absolute left-4 text-slate-400"></i>
+                <input 
+                    type="text" 
+                    id="tokenSearch" 
+                    placeholder="Cari nama token (misal: Bitcoin, Solana)..." 
+                    class="w-full pl-11 pr-10 py-3.5 rounded-xl text-sm font-medium text-white glass-input placeholder-slate-500"
+                    autocomplete="off"
+                >
+                <button id="clearSearch" class="hidden absolute right-4 text-slate-400 hover:text-white">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Search Results Dropdown -->
+            <div id="searchDropdown" class="hidden absolute left-0 right-0 mt-2 max-h-60 overflow-y-auto rounded-xl border border-slate-800 bg-slate-900/95 backdrop-blur-2xl shadow-2xl z-50 p-2 space-y-1">
+                <!-- Dynamic Results standard placeholder -->
+            </div>
+        </div>
+
+        <!-- Quick Tabs (Popular Tokens) -->
+        <div class="flex gap-2 overflow-x-auto pb-1" id="quickTabs">
+            <button onclick="loadToken('bitcoin', 'Bitcoin', 'BTC', 'https://assets.coingecko.com/coins/images/1/large/bitcoin.png')" class="flex items-center gap-2 bg-slate-800/40 hover:bg-slate-800/80 border border-slate-800 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all">
+                <img src="https://assets.coingecko.com/coins/images/1/large/bitcoin.png" class="w-4 h-4" alt="BTC"> BTC
+            </button>
+            <button onclick="loadToken('ethereum', 'Ethereum', 'ETH', 'https://assets.coingecko.com/coins/images/279/large/ethereum.png')" class="flex items-center gap-2 bg-slate-800/40 hover:bg-slate-800/80 border border-slate-800 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all">
+                <img src="https://assets.coingecko.com/coins/images/279/large/ethereum.png" class="w-4 h-4" alt="ETH"> ETH
+            </button>
+            <button onclick="loadToken('solana', 'Solana', 'SOL', 'https://assets.coingecko.com/coins/images/4128/large/solana.png')" class="flex items-center gap-2 bg-slate-800/40 hover:bg-slate-800/80 border border-slate-800 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all">
+                <img src="https://assets.coingecko.com/coins/images/4128/large/solana.png" class="w-4 h-4" alt="SOL"> SOL
+            </button>
+            <button onclick="loadToken('binancecoin', 'BNB', 'BNB', 'https://assets.coingecko.com/coins/images/825/large/bnb-icon2_2x.png')" class="flex items-center gap-2 bg-slate-800/40 hover:bg-slate-800/80 border border-slate-800 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all">
+                <img src="https://assets.coingecko.com/coins/images/825/large/bnb-icon2_2x.png" class="w-4 h-4" alt="BNB"> BNB
+            </button>
+        </div>
+
+        <!-- Main Price Display Card -->
+        <main class="glass-card rounded-2xl p-6 relative overflow-hidden shadow-xl" id="priceCard">
+            <!-- Loading Overlay -->
+            <div id="cardLoader" class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm flex flex-col items-center justify-center gap-3 transition-opacity duration-300 z-10">
+                <div class="w-8 h-8 border-4 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin"></div>
+                <p class="text-xs text-indigo-400 font-medium">Memuat data pasar...</p>
+            </div>
+
+            <!-- Token Identity -->
+            <div class="flex items-center justify-between mb-6">
+                <div class="flex items-center gap-3">
+                    <img id="activeTokenImg" src="https://assets.coingecko.com/coins/images/1/large/bitcoin.png" class="w-12 h-12 rounded-full border border-slate-700/50 p-1" alt="Token Logo">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h2 id="activeTokenName" class="text-lg font-bold text-white">Bitcoin</h2>
+                            <span id="activeTokenSymbol" class="text-[10px] font-bold bg-slate-800 text-slate-300 px-2 py-0.5 rounded-md uppercase tracking-wider">BTC</span>
+                        </div>
+                        <p class="text-xs text-slate-400 font-medium mt-0.5" id="marketCapRank">Rank #1</p>
+                    </div>
+                </div>
+                <!-- 24h Change Badge -->
+                <div id="priceChange24h" class="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold">
+                    <i id="priceChangeIcon" class="fa-solid"></i>
+                    <span id="priceChangeVal">0.00%</span>
+                </div>
+            </div>
+
+            <!-- Prices Grid -->
+            <div class="space-y-4 border-b border-slate-800/60 pb-5 mb-5">
+                <div>
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Harga USD</p>
+                    <div class="text-3xl font-extrabold text-white tracking-tight" id="priceUSD">$0.00</div>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Harga IDR</p>
+                    <div class="text-xl font-bold text-indigo-300 tracking-tight" id="priceIDR">Rp 0</div>
+                </div>
+            </div>
+
+            <!-- Market Info Mini Grid -->
+            <div class="grid grid-cols-2 gap-4 text-xs">
+                <div>
+                    <p class="text-slate-500 font-medium mb-0.5">Kapitalisasi Pasar</p>
+                    <p id="marketCap" class="font-semibold text-slate-300">-</p>
+                </div>
+                <div>
+                    <p class="text-slate-500 font-medium mb-0.5">Pembaruan Terakhir</p>
+                    <p id="lastUpdated" class="font-semibold text-slate-300">-</p>
+                </div>
+            </div>
+        </main>
+
+        <!-- Dynamic Converter Calculator Card -->
+        <section class="glass-card rounded-2xl p-6 shadow-xl space-y-4">
+            <div class="flex items-center gap-2 mb-2">
+                <div class="w-7 h-7 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center">
+                    <i class="fa-solid fa-calculator text-xs text-indigo-400"></i>
+                </div>
+                <h3 class="text-sm font-bold text-white">Kalkulator Konversi</h3>
+            </div>
+
+            <!-- Input Token Amount -->
+            <div class="space-y-1">
+                <label class="text-xs font-semibold text-slate-400 flex justify-between">
+                    <span>Jumlah <span class="activeSymbolText">Token</span></span>
+                    <span class="text-[10px] text-slate-500 uppercase activeSymbolText">Crypto</span>
+                </label>
+                <div class="relative flex items-center">
+                    <input type="number" id="calcCrypto" value="1" step="any" min="0" class="w-full pl-4 pr-16 py-3 rounded-xl font-bold text-white glass-input text-sm">
+                    <span class="absolute right-4 text-xs font-bold text-indigo-400 uppercase activeSymbolText" id="calcCryptoBadge">BTC</span>
+                </div>
+            </div>
+
+            <!-- Inter-change Icon Indicator -->
+            <div class="flex justify-center my-[-8px]">
+                <div class="bg-slate-800/80 border border-slate-700/60 p-1.5 rounded-full text-slate-400 text-[10px]">
+                    <i class="fa-solid fa-arrows-up-down"></i>
+                </div>
+            </div>
+
+            <!-- Input USD Value -->
+            <div class="space-y-1">
+                <label class="text-xs font-semibold text-slate-400">Nilai dalam USD ($)</label>
+                <div class="relative flex items-center">
+                    <input type="number" id="calcUSD" step="any" min="0" class="w-full pl-4 pr-12 py-3 rounded-xl font-bold text-white glass-input text-sm">
+                    <span class="absolute right-4 text-xs font-bold text-slate-500">USD</span>
+                </div>
+            </div>
+
+            <!-- Input IDR Value -->
+            <div class="space-y-1">
+                <label class="text-xs font-semibold text-slate-400">Nilai dalam IDR (Rp)</label>
+                <div class="relative flex items-center">
+                    <input type="number" id="calcIDR" step="any" min="0" class="w-full pl-4 pr-12 py-3 rounded-xl font-bold text-indigo-300 glass-input text-sm">
+                    <span class="absolute right-4 text-xs font-bold text-slate-500">IDR</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer Footer info -->
+        <footer class="text-center space-y-1 pt-2 pb-6">
+            <p class="text-[11px] text-slate-500 font-medium">Data bersumber dari API Resmi CoinGecko</p>
+            <p class="text-[10px] text-slate-600 font-semibold">CryptoPulse Engine &copy; 2026</p>
+        </footer>
+
+    </div>
+
+    <!-- Frontend Functional JavaScript -->
+    <script>
+        // ========================================================
+        // KONFIGURASI API KEY COINGECKO
+        // ========================================================
+        // Masukkan API Key Anda di sini. 
+        // CoinGecko public API bisa digunakan tanpa key (dengan limit ketat).
+        const COINGECKO_API_KEY = 'CG-w7x9CDXrEqLd9ncT8TCCNDEv'; // Contoh: 'CG-xxxXXXxxx'
+        
+        const fetchHeaders = {
+            'accept': 'application/json'
+        };
+        
+        if (COINGECKO_API_KEY) {
+            fetchHeaders['x-cg-demo-api-key'] = COINGECKO_API_KEY;
+        }
+        // ========================================================
+
+        // State Management
+        let activeTokenId = 'bitcoin';
+        let activeTokenName = 'Bitcoin';
+        let activeTokenSymbol = 'BTC';
+        let activeTokenImg = 'https://assets.coingecko.com/coins/images/1/large/bitcoin.png';
+        
+        let currentPriceUSD = 0;
+        let currentPriceIDR = 0;
+        let searchTimeout = null;
+
+        // Elements
+        const tokenSearch = document.getElementById('tokenSearch');
+        const clearSearch = document.getElementById('clearSearch');
+        const searchDropdown = document.getElementById('searchDropdown');
+        const cardLoader = document.getElementById('cardLoader');
+        
+        const calcCrypto = document.getElementById('calcCrypto');
+        const calcUSD = document.getElementById('calcUSD');
+        const calcIDR = document.getElementById('calcIDR');
+
+        // Document Init
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchTokenPrice(activeTokenId);
+            setupSearchListeners();
+            setupCalculatorListeners();
+        });
+
+        // Fetch Live Price Data Directly from CoinGecko API
+        async function fetchTokenPrice(id) {
+            showLoader(true);
+            try {
+                const fetchUrl = `https://api.coingecko.com/api/v3/simple/price?ids=${id}&vs_currencies=usd,idr&include_24hr_change=true&include_market_cap=true`;
+                const response = await fetch(fetchUrl, { method: 'GET', headers: fetchHeaders });
+                const data = await response.json();
+                
+                if (data && data[id]) {
+                    const priceData = data[id];
+                    currentPriceUSD = priceData.usd || 0;
+                    currentPriceIDR = priceData.idr || 0;
+                    const change24h = priceData.usd_24h_change || 0;
+                    const marketCapVal = priceData.usd_market_cap || 0;
+
+                    // Update Main Card UI
+                    document.getElementById('activeTokenImg').src = activeTokenImg;
+                    document.getElementById('activeTokenName').innerText = activeTokenName;
+                    
+                    const symbolBadges = document.querySelectorAll('.activeSymbolText');
+                    symbolBadges.forEach(el => el.innerText = activeTokenSymbol.toUpperCase());
+
+                    document.getElementById('priceUSD').innerText = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 6 }).format(currentPriceUSD);
+                    document.getElementById('priceIDR').innerText = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(currentPriceIDR);
+                    
+                    // Style 24h Change
+                    const changeBadge = document.getElementById('priceChange24h');
+                    const changeIcon = document.getElementById('priceChangeIcon');
+                    const changeValText = document.getElementById('priceChangeVal');
+                    
+                    changeValText.innerText = `${change24h.toFixed(2)}%`;
+                    if (change24h >= 0) {
+                        changeBadge.className = "flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-500/10 border border-emerald-500/20 text-emerald-400";
+                        changeIcon.className = "fa-solid fa-caret-up";
+                    } else {
+                        changeBadge.className = "flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-rose-500/10 border border-rose-500/20 text-rose-400";
+                        changeIcon.className = "fa-solid fa-caret-down";
+                    }
+
+                    document.getElementById('marketCap').innerText = marketCapVal ? new Intl.NumberFormat('en-US', { notation: "compact", compactDisplay: "short" }).format(marketCapVal) : '-';
+                    document.getElementById('lastUpdated').innerText = new Date().toLocaleTimeString('id-ID', { hour: '2-2-digit', minute: '2-2-digit', second: '2-2-digit' });
+                    
+                    // Sync Calculator Values
+                    updateCalculatorFromCrypto();
+                } else {
+                    console.error('Data token tidak ditemukan atau Anda terkena Rate Limit.');
+                }
+            } catch (error) {
+                console.error('Error fetching token data:', error);
+            } finally {
+                showLoader(false);
+            }
+        }
+
+        // Search Setup
+        function setupSearchListeners() {
+            tokenSearch.addEventListener('input', (e) => {
+                const query = e.target.value.trim();
+                if (query.length > 0) {
+                    clearSearch.classList.remove('hidden');
+                } else {
+                    clearSearch.classList.add('hidden');
+                    searchDropdown.classList.add('hidden');
+                }
+
+                // Debounce API calls
+                clearTimeout(searchTimeout);
+                if (query.length < 2) {
+                    searchDropdown.classList.add('hidden');
+                    return;
+                }
+
+                searchTimeout = setTimeout(async () => {
+                    try {
+                        const fetchUrl = `https://api.coingecko.com/api/v3/search?query=${encodeURIComponent(query)}`;
+                        const res = await fetch(fetchUrl, { method: 'GET', headers: fetchHeaders });
+                        const data = await res.json();
+                        
+                        if (data && data.coins && data.coins.length > 0) {
+                            renderSearchResults(data.coins.slice(0, 7));
+                        } else {
+                            searchDropdown.innerHTML = '<div class="text-xs text-slate-500 p-3 text-center">Token tidak ditemukan</div>';
+                            searchDropdown.classList.remove('hidden');
+                        }
+                    } catch (err) {
+                        console.error('Search error:', err);
+                    }
+                }, 400); // 400ms delay untuk menghindari spam API
+            });
+
+            clearSearch.addEventListener('click', () => {
+                tokenSearch.value = '';
+                clearSearch.classList.add('hidden');
+                searchDropdown.classList.add('hidden');
+                tokenSearch.focus();
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!tokenSearch.contains(e.target) && !searchDropdown.contains(e.target)) {
+                    searchDropdown.classList.add('hidden');
+                }
+            });
+        }
+
+        function renderSearchResults(coins) {
+            searchDropdown.innerHTML = '';
+            coins.forEach(coin => {
+                const item = document.createElement('div');
+                item.className = "flex items-center justify-between p-2.5 hover:bg-slate-800/60 rounded-lg cursor-pointer transition-colors";
+                item.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <img src="${coin.thumb}" class="w-6 h-6 rounded-full" alt="${coin.symbol}">
+                        <div>
+                            <p class="text-xs font-bold text-white">${coin.name}</p>
+                            <p class="text-[10px] text-slate-400 font-medium uppercase">${coin.symbol}</p>
+                        </div>
+                    </div>
+                    <span class="text-[10px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded font-bold">Rank #${coin.market_cap_rank || 'N/A'}</span>
+                `;
+                item.addEventListener('click', () => {
+                    loadToken(coin.id, coin.name, coin.symbol, coin.thumb);
+                    searchDropdown.classList.add('hidden');
+                    tokenSearch.value = '';
+                    clearSearch.classList.add('hidden');
+                });
+                searchDropdown.appendChild(item);
+            });
+            searchDropdown.classList.remove('hidden');
+        }
+
+        function loadToken(id, name, symbol, thumb) {
+            activeTokenId = id;
+            activeTokenName = name;
+            activeTokenSymbol = symbol;
+            activeTokenImg = thumb;
+            
+            // Set dynamic badge inside the dropdown/rank layout if available
+            document.getElementById('marketCapRank').innerText = `ID Token: ${symbol.toUpperCase()}`;
+            
+            fetchTokenPrice(id);
+        }
+
+        // Two-way Multi-currency Binded Calculator
+        function setupCalculatorListeners() {
+            calcCrypto.addEventListener('input', () => {
+                updateCalculatorFromCrypto();
+            });
+
+            calcUSD.addEventListener('input', () => {
+                const usdValue = parseFloat(calcUSD.value) || 0;
+                if (currentPriceUSD > 0) {
+                    calcCrypto.value = (usdValue / currentPriceUSD).toFixed(6);
+                    calcIDR.value = Math.round(usdValue * (currentPriceIDR / currentPriceUSD));
+                } else {
+                    calcCrypto.value = 0;
+                    calcIDR.value = 0;
+                }
+            });
+
+            calcIDR.addEventListener('input', () => {
+                const idrValue = parseFloat(calcIDR.value) || 0;
+                if (currentPriceIDR > 0) {
+                    calcCrypto.value = (idrValue / currentPriceIDR).toFixed(6);
+                    calcUSD.value = (idrValue * (currentPriceUSD / currentPriceIDR)).toFixed(2);
+                } else {
+                    calcCrypto.value = 0;
+                    calcUSD.value = 0;
+                }
+            });
+        }
+
+        function updateCalculatorFromCrypto() {
+            const cryptoQty = parseFloat(calcCrypto.value) || 0;
+            calcUSD.value = (cryptoQty * currentPriceUSD).toFixed(2);
+            calcIDR.value = Math.round(cryptoQty * currentPriceIDR);
+        }
+
+        function showLoader(isVisible) {
+            if (isVisible) {
+                cardLoader.classList.remove('opacity-0', 'pointer-events-none');
+            } else {
+                cardLoader.classList.add('opacity-0', 'pointer-events-none');
+            }
+        }
+    </script>
+</body>
+</html>
